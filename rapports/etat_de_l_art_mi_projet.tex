@@ -1,18 +1,32 @@
-\documentclass[11pt,a4paper]{article}
+\documentclass[11pt,a4paper,oneside]{article}
+
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
+\usepackage[margin=2cm]{geometry}
 \usepackage[french]{babel}
 \usepackage{minted}
 \usepackage{hyperref}
-\usepackage{fullpage} % page margins to 1.5cm
+\usepackage{titlesec}
+\usepackage[pdftex]{graphicx} % graphics importing
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\setlength\headheight{14pt}
+\lhead[]{Docker and Embedded systems}
+\chead[]{}
+\rhead{\includegraphics[width=3cm]{img/mse_logo}}
+\cfoot[]{\thepage}
+
+
 
 \newminted{bash}{xleftmargin=20pt, linenos=true, breaklines=true, frame=single, framesep=6pt, tabsize=2, fontfamily=courier, fontsize=\small}
 
+\titleformat{\chapter}{\normalfont\huge}{\thechapter.}{20pt}{\huge}
 
 \title{Etat de l'art à la mi-projet de semestre Docker and embedded systems - Où comment ne pas cross compiler Docker sur ARM}
 
 \date{\today}
-\author{Gary Marigliano}
+\author{Gary \bsc{Marigliano}}
 
 \begin{document}
 
@@ -23,9 +37,9 @@
 \newpage
 \pagenumbering{arabic}
 
-\section{Introduction}
+\chapter{Introduction}
 
-\subsection{Contexte}
+\section{Contexte}
 
 Ce document s'inscrit dans le cadre du projet de semsetre Docker and embedded systems actuellement réalisé par moi-même. Un des buts de ce projet est de cross-compiler Docker à partir de ses sources pour produire un binaire exécutable sur un Odroid XU3 (ARMv7).
 
@@ -35,8 +49,7 @@ Il est important de noter que la vitesse de développement de Docker est assez h
 
 
 
-
-\subsection{Objectifs}
+\section{Objectifs}
 
 De manière plus précise, ce projet vise à maitriser les parties suivantes:
 
@@ -50,7 +63,7 @@ L'objectif de ce document est d'énumérer les différentes techniques tentées 
 
 
 
-\section{Objectif 1 - Construction d'un système GNU/Linux Docker-ready}
+\chapter{Objectif 1 - Construction d'un système GNU/Linux Docker-ready}
 
 Dans cette partie, on verra les ingrédients et pistes à suivre pour conçevoir un système construit à partir de Buildroot capable de faire tourner Docker et son \emph{daemon}.
 
@@ -67,19 +80,19 @@ Dans cette partie, on verra les ingrédients et pistes à suivre pour conçevoir
 
 
 
-\section{Objectif 2 - Techniques de compilation essayées}
+\chapter{Objectif 2 - Techniques de compilation essayées}
 
-\subsection{La manière officielle}
+\section{La manière officielle}
 
 C'est la manière recommandée et qui, un jour, sera celle qu'il faudra
 employer. Mais aujourd'hui, elle ne permet que de cross compiler un
 binaire ARM Docker qui n'embarque pas le \emph{deamon}.
 
-\subsubsection{Principe utilisé}
+\subsection{Principe utilisé}
 
 Pour compiler Docker de la manière officiellement supportée, on doit utiliser Docker. En effet, le Makefile fourni va lancer un container Docker qui va contenir un système d'exploitation ainsi que tous les pré-requis et dépendances puis lancer la compilation de Docker à l'intérieur de ce container.
 
-\subsubsection{Cheminement général}
+\subsection{Cheminement général}
 
 Sur une machine GNU/Linux
 
@@ -94,9 +107,9 @@ make cross # pour générer le binaire ARM
 
 Le binaire se trouve dans le dossier ./bundle.
 
-\subsubsection{Schéma}
+\subsection{Schéma}
 
-\subsubsection{Limitations}
+\subsection{Limitations}
 
 Actuellement, il est possible de générer un binaire Docker x64 et ARM mais seule l'architecture x64 intègre le \emph{deamon} nécessaire à la création de containers.
 
@@ -104,75 +117,94 @@ Le binaire ARM est dit CLIENT\_ONLY dans le sens où il peut être le client d'u
 
 
 
-\subsection{Compiler directement sur une machine ARM en utilisant la manière officielle}
+\section{Compiler directement sur une machine ARM en utilisant la manière officielle}
 
-\subsubsection{Principe utilisé}
+\subsection{Principe utilisé}
 
-\subsubsection{Cheminement général}
+\subsection{Cheminement général}
 
-\subsubsection{Schéma}
+\subsection{Schéma}
 
-\subsubsection{Limitations}
-
-
-
-\subsection{Compiler en émulant une machine ARM sur un PC de bureau avec QEMU et chroot}
-
-\subsubsection{Principe utilisé}
-
-\subsubsection{Cheminement général}
-
-\subsubsection{Schéma}
-
-\subsubsection{Limitations}
+\subsection{Limitations}
 
 
 
-\subsection{Compiler en émulant une machine ARM sur un PC de bureau avec QEMU et une image Debian}
+\section{Compiler en émulant une machine ARM sur un PC de bureau avec QEMU et chroot}
 
-\subsubsection{Principe utilisé}
+\subsection{Principe utilisé}
 
-\subsubsection{Cheminement général}
+\subsection{Cheminement général}
 
-\subsubsection{Schéma}
+\subsection{Schéma}
 
-\subsubsection{Limitations}
-
-
-
-
-\subsection{Compiler en émulant une machine ARM sur un PC de bureau avec QEMU et une image Raspbian}
-
-\subsubsection{Principe utilisé}
-
-\subsubsection{Cheminement général}
-
-\subsubsection{Schéma}
-
-\subsubsection{Limitations}
+\subsection{Limitations}
 
 
 
-\subsection{Compiler en émulant une machine ARM sur un PC de bureau avec QEMU et une image Archlinux ARM}
+\section{Compiler en émulant une machine ARM sur un PC de bureau avec QEMU et une image Debian}
 
-\subsubsection{Principe utilisé}
+\subsection{Principe utilisé}
 
-\subsubsection{Cheminement général}
+\subsection{Cheminement général}
 
-\subsubsection{Schéma}
+\subsection{Schéma}
 
-\subsubsection{Limitations}
+\subsection{Limitations}
 
 
 
-\subsection{Compiler Docker sans Docker}
 
-\subsubsection{Principe utilisé}
+\section{Compiler en émulant une machine ARM sur un PC de bureau avec QEMU et une image Raspbian}
 
-\subsubsection{Cheminement général}
+\subsection{Principe utilisé}
 
-\subsubsection{Schéma}
+\subsection{Cheminement général}
 
-\subsubsection{Limitations}
+\subsection{Schéma}
+
+\subsection{Limitations}
+
+
+
+\section{Compiler en émulant une machine ARM sur un PC de bureau avec QEMU et une image Archlinux ARM}
+
+\subsection{Principe utilisé}
+
+\subsection{Cheminement général}
+
+\subsection{Schéma}
+
+\subsection{Limitations}
+
+
+
+\section{Compiler Docker sans Docker}
+
+\subsection{Principe utilisé}
+
+\subsection{Cheminement général}
+
+\subsection{Schéma}
+
+\subsection{Limitations}
+
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
 
 \end{document}
