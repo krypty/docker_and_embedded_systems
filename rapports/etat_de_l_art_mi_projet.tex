@@ -1,3 +1,4 @@
+% inspired from: https://github.com/SnipyJulmy/hesso-latextemplate-lab
 \documentclass[11pt,a4paper,oneside]{article}
 
 \usepackage[utf8]{inputenc}
@@ -8,6 +9,7 @@
 \usepackage{hyperref}
 \usepackage{titlesec}
 \usepackage[pdftex]{graphicx} % graphics importing
+\usepackage{titling}
 
 \usepackage{fancyhdr}
 \pagestyle{fancy}
@@ -23,14 +25,25 @@
 
 \titleformat{\chapter}{\normalfont\huge}{\thechapter.}{20pt}{\huge}
 
-\title{Etat de l'art à la mi-projet de semestre Docker and embedded systems - Où comment ne pas cross compiler Docker sur ARM}
-
-\date{\today}
+\title{État de l'art à la mi-projet de semestre Docker and embedded systems - Où comment ne pas cross compiler Docker sur ARM}
 \author{Gary \bsc{Marigliano}}
 
 \begin{document}
 
-\maketitle
+\begin{titlepage}
+  \centering
+  \vfill
+  \LARGE \thetitle\\[0.8cm]
+
+  \Large \theauthor\\[0.8cm]
+
+  \normalsize \today
+  \vfill
+  \includegraphics[width=8cm]{img/docker_logo} % also works with logo.pdf
+  \vfill
+  \vfill
+\end{titlepage}
+
 \pagenumbering{gobble}
 \newpage
 \tableofcontents

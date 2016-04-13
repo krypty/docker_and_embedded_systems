@@ -38,3 +38,5 @@
 *.tdo
 
 _minted*
+
+img/*.pdf
