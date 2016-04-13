@@ -1,29 +1,40 @@
 % inspired from: https://github.com/SnipyJulmy/hesso-latextemplate-lab
-\documentclass[11pt,a4paper,oneside]{article}
-
+\documentclass[11pt,a4paper,oneside]{report}
+\usepackage[margin=2cm]{geometry}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage[margin=2cm]{geometry}
 \usepackage[french]{babel}
 \usepackage{minted}
-\usepackage{hyperref}
 \usepackage{titlesec}
 \usepackage[pdftex]{graphicx} % graphics importing
-\usepackage{titling}
+\usepackage{titling} % can use \theauthor \thetitle
+\usepackage{parskip} % remove first line indenting in a section
+\usepackage{microtype} % typographic improvements
+\usepackage[defaultlines=3,all]{nowidow}
+\usepackage{lipsum}
 
 \usepackage{fancyhdr}
-\pagestyle{fancy}
+\pagestyle{fancyplain}
+\fancyhf{}
 \setlength\headheight{14pt}
 \lhead[]{Docker and Embedded systems}
 \chead[]{}
 \rhead{\includegraphics[width=3cm]{img/mse_logo}}
 \cfoot[]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}% Default \headrulewidth is 0.4pt
+\renewcommand{\footrulewidth}{0.4pt}% default is 0pt
 
-
+\usepackage{hyperref}
 
 \newminted{bash}{xleftmargin=20pt, linenos=true, breaklines=true, frame=single, framesep=6pt, tabsize=2, fontfamily=courier, fontsize=\small}
 
+% Chapter titles
+% Remove space before title
+\titlespacing{\chapter}{0pt}{*-4}{*3}
+% Remove "Chapter N" and use a sans-serif font
 \titleformat{\chapter}{\normalfont\huge}{\thechapter.}{20pt}{\huge}
+% Change chapter page style
+\patchcmd{\chapter}{plain}{fancy}{}{}
 
 \title{État de l'art à la mi-projet de semestre Docker and embedded systems - Où comment ne pas cross compiler Docker sur ARM}
 \author{Gary \bsc{Marigliano}}
@@ -39,15 +50,12 @@
 
   \normalsize \today
   \vfill
-  \includegraphics[width=8cm]{img/docker_logo} % also works with logo.pdf
-  \vfill
+  \includegraphics[width=8cm]{img/docker_logo}
   \vfill
 \end{titlepage}
 
 \pagenumbering{gobble}
-\newpage
 \tableofcontents
-\newpage
 \pagenumbering{arabic}
 
 \chapter{Introduction}
@@ -67,7 +75,7 @@ Il est important de noter que la vitesse de développement de Docker est assez h
 De manière plus précise, ce projet vise à maitriser les parties suivantes:
 
 \begin{enumerate}
-  \item Construction d'un système Linux capable de faire tourner Docker et son \emph{daemon} en utilisant Buildroot. Pour générer le dit système, on dispose d'un \emph{repository} Gitlab herbergé à la Haute Ecole de Fribourg. \emph{TODO} ajouter lien !
+  \item Construction d'un système Linux capable de faire tourner Docker et son \emph{daemon} en utilisant Buildroot. Pour générer le dit système, on dispose d'un \emph{repository} Gitlab herbergé à la Haute Ecole de Fribourg.
 
   \item Cross-compilation de Docker et de son daemon, capable de faire tourner des containers
 \end{enumerate}
@@ -132,73 +140,452 @@ Le binaire ARM est dit CLIENT\_ONLY dans le sens où il peut être le client d'u
 
 \section{Compiler directement sur une machine ARM en utilisant la manière officielle}
 
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
 \subsection{Principe utilisé}
 
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
 \subsection{Cheminement général}
 
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
 \subsection{Schéma}
 
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
 \subsection{Limitations}
 
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
 
 
 \section{Compiler en émulant une machine ARM sur un PC de bureau avec QEMU et chroot}
 
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
 \subsection{Principe utilisé}
 
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
 \subsection{Cheminement général}
 
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
 \subsection{Schéma}
 
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
 \subsection{Limitations}
 
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
 
 
 \section{Compiler en émulant une machine ARM sur un PC de bureau avec QEMU et une image Debian}
 
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
 \subsection{Principe utilisé}
 
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
 \subsection{Cheminement général}
 
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
 \subsection{Schéma}
 
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
 \subsection{Limitations}
 
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
 
 
 
 \section{Compiler en émulant une machine ARM sur un PC de bureau avec QEMU et une image Raspbian}
 
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
 \subsection{Principe utilisé}
 
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
 \subsection{Cheminement général}
 
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
 \subsection{Schéma}
 
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
 \subsection{Limitations}
 
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
 
 
 \section{Compiler en émulant une machine ARM sur un PC de bureau avec QEMU et une image Archlinux ARM}
 
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
 \subsection{Principe utilisé}
+
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
 
 \subsection{Cheminement général}
 
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
 \subsection{Schéma}
 
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
 \subsection{Limitations}
 
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
 
 
 \section{Compiler Docker sans Docker}
 
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
 \subsection{Principe utilisé}
 
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
 \subsection{Cheminement général}
 
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
 \subsection{Schéma}
 
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
+Il existe certaines limitations.
 \subsection{Limitations}
 
 Il existe certaines limitations.
