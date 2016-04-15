@@ -39,6 +39,8 @@
 % Change chapter page style
 \patchcmd{\chapter}{plain}{fancy}{}{}
 
+\newcommand{\code}[1]{\texttt{#1}} % inline code
+
 \title{État de l'art à la mi-projet de semestre Docker and embedded systems - Où comment ne pas cross compiler Docker sur ARM}
 \author{Gary \bsc{Marigliano}}
 
@@ -51,7 +53,9 @@
 
   \Large \theauthor\\[0.8cm]
 
-  \normalsize \today
+  \normalsize \today 
+
+  Version 0.0.1
   \vfill
   \includegraphics[width=8cm]{img/docker_logo}
   \vfill
@@ -65,7 +69,7 @@
 
 \section{Contexte}\label{contexte}
 
-Ce document s'inscrit dans le cadre du projet de semestre Docker and embedded systems actuellement réalisé par moi-même. Un des buts de ce projet est de cross-compiler Docker à partir de ses sources pour produire un binaire exécutable sur un Odroid XU3 (ARMv7).
+Ce document s'inscrit dans le cadre du projet de semestre Docker and embedded systems actuellement réalisé par moi-même. Un des buts de ce projet est de cross compiler Docker à partir de ses sources pour produire un binaire exécutable sur un Odroid XU3 (ARMv7).
 
 Lien: \url{https://github.com/krypty/docker_and_embedded_systems}
 
@@ -79,7 +83,7 @@ De manière plus précise, ce projet vise à maitriser les parties suivantes:
 \begin{enumerate}
   \item Construction d'un système Linux capable de faire tourner Docker et son \emph{daemon} en utilisant Buildroot. Pour générer le dit système, on dispose d'un \emph{repository} Gitlab hébergé à la Haute École de Fribourg.
 
-  \item Cross-compilation de Docker et de son \emph{daemon}, capable de faire tourner des containers
+  \item Cross compilation de Docker et de son \emph{daemon}, capable de faire tourner des containers
 \end{enumerate}
 
 L'objectif de ce document est d'énumérer les différentes techniques tentées pour (cross-)compiler Docker sur une cible ARM. De cette manière, le lecteur, en cas de reprise du projet ou par simple curiosité, aura une idée des pistes à explorer ou à éviter.
@@ -97,20 +101,20 @@ Comme évoqué à la section \ref{contexte}, on dispose d'un Odroid XU3 sur lequ
 Toutes les ressources nécessaires à la génération du système se trouvent ici :
 
 \begin{itemize}
-  \item Procédure de génération du système du cours CSEL : \emph{\newline p.02.2\_mas\_csel\_environnement\_linux\_embarque\_exercices.pdf}
-  \item Script de génération de la carte utilisé : \url{https://github.com/krypty/docker\_and\_embedded\_systems/blob/master/write\_system\_on\_sd.sh}
+  \item Procédure de génération du système du cours CSEL et adresse du \textit{repository} git : \emph{\newline p.02.2\_mas\_csel\_environnement\_linux\_embarque\_exercices.pdf}
+  \item Script de génération de la carte utilisé : \url{https://github.com/krypty/docker\_and\_embedded\_systems/blob/master/write\_system\_on\_sd.sh} ou Appendix \ref{write_system_sd}
   \item Le PDF \emph{01\_IntroOdroidXu3.pdf} du cours SeS
 \end{itemize}
 
-Le système généré, ne peut, dans sa configuration actuelle, permettre à Docker de se lancer. Pour pouvoir le faire, on a deux moyens à dispositions : Buildroot et le kernel.
+Le système généré, ne peut, dans sa configuration actuelle, permettre à Docker de se lancer. Pour pouvoir le faire, on a deux moyens à disposition : Buildroot et le kernel.
 
-Grossièrement, Buildroot permet d'ajouter des packages et de configurer son système tandis que le kernel permet d'ajouter des modules ou des drivers.
+Grossièrement, Buildroot permet d'ajouter des packages et de configurer son système      que le kernel permet d'ajouter des modules ou des drivers.
 
 \section{Vérifier que le système peut faire tourner Docker}
 
-Il faut en premier lieu mettre la main sur un binaire ARM Docker qui intègre le \emph{daemon}. En effet, à l'heure actuelle, lorsqu'on compile Docker pour ARM de la manière officielle, le binaire résultant n'intègre pas le \emph{daemon} mais uniquement le client (qui permet de se connecter à un \emph{daemon} externe). Voir également à la section \ref{maniere_officielle_limitations}
+Il faut en premier lieu mettre la main sur un binaire ARM Docker statiquement lié qui intègre le \emph{daemon}. En effet, à l'heure actuelle, lorsqu'on compile Docker pour ARM de la manière officielle, le binaire résultant n'intègre pas le \emph{daemon} mais uniquement le client (qui permet de se connecter à un \emph{daemon} externe). Voir également à la section \ref{maniere_officielle_limitations}
 
-Le seul binaire de ce type que j'ai trouvé actuellement est téléchargeable ici: \url{https://github.com/umiddelb/armhf/raw/master/bin/docker-1.9.1}.
+Le seul binaire de ce type que j'ai trouvé actuellement est téléchargeable ici: \url{https://github.com/umiddelb/armhf/raw/master/bin/docker-1.9.1}\label{binaire_arm}.
 
 Copiez ce fichier sur la cible et tentez de le lancer avec:
 
@@ -182,7 +186,7 @@ Optional Features:
 
 La suite consiste à modifier le kernel pour y ajouter les modules manquants, de reflasher le système et tester à nouveau si Docker se lance.
 
-Je n'explique volontairement pas comment modifier la configuration d'un kernel Linux, car d'une part cette information se trouve facilement sur internet ou sur les documents indiqués plus haut et d'autre une car ce n'est pas le but de ce rapport.
+Je n'explique volontairement pas comment modifier la configuration d'un kernel Linux, car d'une part cette information se trouve facilement sur Internet ou sur les documents indiqués plus haut et d'autre une car ce n'est pas le but de ce rapport.
 
 \chapter{Objectif 2 - Techniques de compilation essayées}
 
@@ -209,11 +213,11 @@ make binary # pour générer le binaire sur la plateforme sur laquelle on est en
 make cross # pour générer le binaire ARM
 \end{bashcode}
 
-Le binaire se trouve dans le dossier ./bundle.
+Le binaire se trouve dans le dossier ./bundle. On se place volontairement sur un tag de release pour avoir un minimum de stabilité dans les fonctionnalités embarquées.
 
 \subsection{Schéma}
 
-Comme on peut le voir à la figure \ref{fig_docker_in_docker}, pour compiler Docker, il faut disposer de Docker sur son PC. En faisant une commande \textit{make}, Docker va créer un container basé sur une image Ubuntu et va installer tous les outils de compilation nécessaires. Une fois que cela est fait, Docker utilise ce container pour lancer la compilation. Le binaire est ensuite récupéré dans le dossier \textit{./bundle}. Il ne reste plus qu'à copier le binaire sur la cible.
+Comme on peut le voir à la figure \ref{fig_docker_in_docker}, pour compiler Docker, il faut disposer de Docker sur son PC. En faisant une commande \code{make}, Docker va créer un container basé sur une image Ubuntu et va installer tous les outils de compilation nécessaires. Une fois que cela est fait, Docker utilise ce container pour lancer la compilation. Le binaire est ensuite récupéré dans le dossier \code{./bundle}. Il ne reste plus qu'à copier le binaire sur la cible.
 
 \begin{figure}
     \begin{center}
@@ -230,480 +234,338 @@ Actuellement, il est possible de générer un binaire Docker x64 et ARM mais seu
 Le binaire ARM est dit CLIENT\_ONLY dans le sens où il peut être le client d'un \emph{deamon} Docker remote (instancié sur une autre machine).
 
 
-
 \section{Compiler directement sur une machine ARM en utilisant la manière officielle}
 
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
+Même principe que la technique précédente à la différence que le PC Host est remplacé par la cible, une carte ARM. On va donc avoir besoin d'une carte qui propose une distribution GNU/Linux qui intègre Docker. Dans le cas de l'Odroid XU3, il existe Archlinux ARM\footnote{Archlinux ARM: \url{https://archlinuxarm.org/}}.
+
 \subsection{Principe utilisé}
 
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
+Voir section \ref{maniere_officielle}.
+
+Remarque: dans ce cas, seul \code{make binary} est nécessaire car on n'est pas obligé de cross compiler pour d'autres plateformes.
+
 \subsection{Cheminement général}
 
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
+Voir section \ref{maniere_officielle}.
 \subsection{Schéma}
 
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
+Voir section \ref{maniere_officielle}.
+
 \subsection{Limitations}
 
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
+Lors de mes tests, j'ai tenté à plusieurs reprises de compiler Docker en utilisant mon Odroid C1 personnel mais je ne suis jamais arrivé à finir la compilation car elle plantait au bout d'une bonne heure.
 
-
-\section{Compiler en émulant une machine ARM sur un PC de bureau avec QEMU et chroot}
-
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-\subsection{Principe utilisé}
-
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-\subsection{Cheminement général}
-
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-\subsection{Schéma}
-
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-\subsection{Limitations}
-
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
+Évidemment, le temps de compilation est énormément long et on est limité par la machine avec laquelle on compile. Une autre possibilité pour l'avenir serait de passer par un prestataire Cloud qui fournit des machines ARM. Scaleway semble proposer ce genre d'offre\footnote{Scaleway: \url{https://www.scaleway.com/}}
 
 
 \section{Compiler en émulant une machine ARM sur un PC de bureau avec QEMU et une image Debian}
 
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
 \subsection{Principe utilisé}
 
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
+Cette technique (et les suivantes basées sur celle-ci) est différente. Ici, on utilise une machine virtuelle QEMU\footnote{QEMU, émuler une machine complète: \url{http://wiki.qemu.org/Main_Page}} pour compiler Docker. On ne fait donc plus de cross compilation mais de l'émulation. On verra dans au chapitre \ref{executer_containers_arm_sur_x64} que l'on peut utiliser QEMU pour exécuter des containers ARM sur une machine x64.
+
 \subsection{Cheminement général}
 
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
+Il faut d'abord installer QEMU sur une machine. J'utilise Archlinux mais cela devrait être sensiblement la même chose pour d'autres distributions.
+
+\label{install_qemu_arch}
+\begin{bashcode}
+yaourt -S qemu qemu-arch-extra
+\end{bashcode}
+
+Pour la suite, j'ai suivi les tutoriels suivants: 
+\begin{enumerate}
+\item A QEMU image for debian armel, \url{http://www.n0nb.us/blog/2012/03/a-qemu-image-for-debian-armel/}.
+\item Debian Wheezy armhf images for QEMU, \url{https://people.debian.org/~aurel32/qemu/armhf/}
+\end{enumerate}
+
+Je vais pas m'étendre sur cette solution, car Debian ARM ne propose pas de package Docker et cette VM Debian ne permet pas dans sa configuration actuelle d'exécuter le binaire ARM proposé à la section \ref{binaire_arm}.
+
 \subsection{Schéma}
 
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
+Comme on peut le voir à la figure \ref{fig_docker_qemu}, on reprend le même principe qu'expliqué à la section: \nameref{maniere_officielle}.
+
+\begin{figure}
+    \begin{center}
+        \includegraphics[scale=0.6]{img/docker_qemu}
+    \end{center}
+    \caption{Docker QEMU}
+    \label{fig_docker_qemu}
+\end{figure}
+
+La principale différence vient du fait qu'on encapsule le processus dans une machine virtuelle QEMU afin d'éviter de utiliser une carte ARM. Une fois le système émulé, on lance Docker pour compiler Docker.
+
 \subsection{Limitations}
 
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
+Cette solution n'est pas une solution à suivre. C'est, à mon avis, une bonne idée mais inutilisable comme présenté ici. Par contre, cela peut devenir intéressant avec d'autres distributions qui intègre un package Docker et dont le kernel est correctement configuré. Par exemple, Raspbian (Une Debian modifiée pour les Raspberry Pi) ou Archlinux ARM. Les solutions suivantes reprennent cette hypothèse\label{hypothese_debian}.
 
+
+Autre point négatif, cette solution (et les dérivées utilisant QEMU) nécessite de disposer d'un binaire ARM Docker, celui de la section \ref{binaire_arm}. Par conséquent, comme on ne sait pas comment produire ce binaire, on ne maîtrise pas l'ensemble de la pipeline de compilation.
 
 
 \section{Compiler en émulant une machine ARM sur un PC de bureau avec QEMU et une image Raspbian}
 
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
 \subsection{Principe utilisé}
 
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-\subsection{Cheminement général}
-
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-\subsection{Schéma}
-
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-\subsection{Limitations}
-
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-
-
-\section{Compiler en émulant une machine ARM sur un PC de bureau avec QEMU et une image Archlinux ARM}
-
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-\subsection{Principe utilisé}
-
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
+Même principe que la technique précédente à la différence près que l'image de la VM n'est plus une Debian mais une Raspbian\footnote{Raspbian: \url{https://www.raspbian.org}}, utilisée par les Raspberry Pi.
 
 \subsection{Cheminement général}
 
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
+Les étapes sont relativement les mêmes que pour la technique précédente. C'est principalement les fichiers à télécharger qui diffèrent.
+
+Voici les tutoriels que j'ai suivis:
+
+\begin{enumerate}
+\item Émuler le Raspberry Pi sous Debian avec Qemu, \url{http://www.jdhp.org/hevea/tutoriel_rpi_qemu/tutoriel_rpi_qemu.html}
+\item Émuler une Raspberry Pi sous Linux avec Qemu, \url{https://assos.centrale-marseille.fr/clubrobot/content/%C3%A9muler-une-raspberry-pi-sous-linux-avec-qemu}
+\end{enumerate}
+
 \subsection{Schéma}
 
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
+Similaire à la technique précédente.
+
 \subsection{Limitations}
 
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
+Similaires à la technique précédente.
 
+Conclusion: aucune amélioration par rapport à la technique précédente. Impossible de compiler Docker.
+
+
+
+\section{Compiler en émulant une machine ARM sur un PC de bureau avec QEMU et chroot}
+
+\subsection{Principe utilisé}
+
+On va utiliser la commande \code{chroot}\footnote{chroot: \url{https://fr.wikipedia.org/wiki/Chroot}} afin d'isoler un machine QEMU dans un répertoire de notre machine de bureau.
+
+\subsection{Cheminement général}
+
+Le tutoriel utilisé est le suivant: \url{https://github.com/RoEdAl/linux-raspberrypi-wsp/wiki/Building-ArchLinux-ARM-packages-ona-a-PC-using-QEMU-Chroot}. Une copie de ces commandes se trouvent à l'Appendix \ref{archlinux_arm_qemu_chroot}.
+
+\subsection{Schéma}
+
+Comme on peut le voir à la figure \ref{fig_chroot_qemu}, la première couche représente le dossier \textit{root} de notre machine et le niveau suivant, les dossiers qu'il contient. Dans un dossier (à créer) appelé \textit{docker\_qemu}, on retrouve les fichiers utilisés par le tutoriel évoqué à la section précédente.
+
+Dans le répertoire \textit{archlinux\_rpi2}, on retrouve le système Archlinux ARM extrait dans lequel on vient copier \code{qemu-arm-static} permettant d'émuler le système ARM.
+
+En clair, tous les dossiers en dessus de \textit{archlinux\_rpi2} appartiennent à l'OS hôte et tous les fichiers en dessus, appartiennent au système invité, Archlinux ARM.
+
+\begin{figure}
+\begin{center}
+        \includegraphics[scale=0.75]{img/chroot_archlinux_rpi}
+        \caption{Docker QEMU}
+        \label{fig_chroot_qemu}
+    \end{center}
+\end{figure}
+
+
+\subsection{Limitations}
+
+Bien que je suis parvenu à booter sur la machine virtuelle, je n'ai pas pu lancer la compilation de Docker car cette procédure à "détecté" que je me trouvais en \code{chroot} et s'est arrêtée.
 
 \section{Compiler Docker sans Docker}
 
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
+Avec cette technique, on essaie de court-circuiter la compilation officielle (Docker in Docker) en compilant Docker sans Docker. Pour ce faire, il faut veiller à avoir une machine qui puisse compiler Go, car Docker est écrit dans ce langage.
+
+\textbf{Attention}: J'ai d'abord essayé de compiler Docker pour une machine x64. Cette technique était avant tout exploratoire et ne permet donc pas de compiler un binaire ARM.
+
 \subsection{Principe utilisé}
 
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
+On compile le programme de manière "classique" sans passer par un container Docker.
+
 \subsection{Cheminement général}
 
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
+Installation de Go sur Archlinux:
+
+\begin{bashcode}
+yaourt -S go
+\end{bashcode}
+
+Ensuite, on effectue les commandes suivantes:
+
+\begin{bashcode}
+git clone https://github.com/docker/docker docker_tmp
+export AUTO_GOPATH=1
+cd docker_tmp
+git checkout v1.10.3 -b gary
+
+# parmis les pré-requis, il manquait btrfs-progs
+yaourt btrfs-progs
+
+# on ignore devicemapper, car il y avait des erreurs.
+export DOCKER_BUILDTAGS='exclude_graphdriver_devicemapper'
+./hack/make.sh binary
+# le binaire se trouve dans ./bundles/1.10.3/binary
+\end{bashcode}
+
 \subsection{Schéma}
 
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
+\begin{figure}
+    \begin{center}
+        \includegraphics[scale=0.6]{img/docker_without_docker}
+    \end{center}
+    \caption{Docker sans Docker}
+    \label{fig_docker_without_docker}
+\end{figure}
+
+La figure \ref{fig_docker_without_docker} montre la différence par rapport à la manière officielle. En effet, Docker n'est plus utilisé mais uniquement ses sources.
+
 \subsection{Limitations}
 
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
-Il existe certaines limitations.
+Cette technique n'est pas une bonne idée pour les raisons suivantes:
+
+\begin{itemize}
+\item Il faut installer et configurer soit même les outils de compilations alors qu'avec la manière officielle, c'est automatiquement fait dans un container.
+\item Lors de mes tests, je n'ai pas essayé de cross compiler vers ARM. C'est possible mais je ne l'ai pas testé.
+\item Cette solution n'apporte rien de plus par rapport à la manière officielle. C'est-à-dire qu'elle produit (ou produirait dans le cas d'une cross compilation ARM) le même binaire qu'avec la manière officielle. Donc, le \textit{deamon} ne serait de toute façon pas disponible.
+
+\end{itemize}
+
+Néanmoins, cette solution m'a permis de comprendre qu'il fallait peut-être modifier le code source de Docker afin d'autoriser l'intégration du \textit{deamon} tout en conservant la technique "Docker in Docker" afin de se faciliter la vie pour installer les outils de compilation.
+
+\section{Conclusion sur les techniques de compilation}
+
+Comme on a pu le voir, plusieurs techniques et tentatives ont été essayées. Aucune n'a permis de  compiler ou de cross compiler Docker pour obtenir un binaire ARM statiquement lié.
+
+Néanmoins, on sait que c'est possible car d'une part des distributions comme Archlinux ARM intègre un package Docker incluant le \textit{deamon} et d'une autre car on a pu mettre la main sur un binaire isolé, voir section \ref{binaire_arm}.
+
+Encore une fois, il n'est pas impossible que l'équipe Docker supporte officiellement le \textit{deamon} pour la plateforme ARM d'ici quelques temps et ce document sera obsolète.
+
+Pour la suite du projet, j'ai installé Archlinux ARM sur l'Odroid XU3 et vais continuer avec une partie concernant la sécurité de Docker et de ces containers.
+
+\chapter{Exécuter des containers ARM sur une machine x64}\label{executer_containers_arm_sur_x64}
+
+Dans ce chapitre, on va voir comment exécuter des containers basés sur des images ARM sur une machine x64. Ceci permet plusieurs choses intéressantes comme:
+
+\begin{itemize}
+\item Tester une image sur son poste avant de la déployer sur une cible
+\item Pouvoir utiliser des images prévues pour ARM sur une machine x64, voire d'en effectuer le portage
+\item Utiliser le container ARM comme outil de cross compilation
+\item Pouvoir développer une application ARM et la tester sur le même PC sans devoir la déployer sur la cible à chaque compilation
+\item ...
+\end{itemize}
+
+
+Lien utile : \url{http://blog.hypriot.com/post/close-encounters-of-the-third-kind/}
+
+On va reprendre l'exemple du blog de Hypriot et lancer un container httpd ARM (un serveur web et une page HTML toute simple).
+
+Il faut d'abord installer QEMU. Pour ce faire, voir section \ref{install_qemu_arch}.
+
+Ensuite, il faut créer un Dockerfile qui se base sur l'image ARM (ici \code{hypriot/rpi-busybox-httpd}) à lancer et une archive contenant \code{qemu-static-arm}.
+
+Création d'un dossier de travail:
+
+\begin{bashcode}
+mkdir hypriot-qemu
+cd hypriot-qemu
+touch Dockerfile
+\end{bashcode}
+
+Dockerfile à créer sur une machine x64:
+
+\begin{bashcode}
+FROM hypriot/rpi-busybox-httpd
+ADD qemu-arm-static.tar /
+\end{bashcode}
+
+Pour l'archive, il faut effectuer les manipulations suivantes :
+
+\begin{bashcode}
+sudo cp /usr/bin/qemu-arm-static .
+sudo chown gary:gary qemu-arm-static
+mkdir usr
+tar -cvf qemu-arm-static.tar usr
+mkdir usr/bin
+tar -uvf qemu-arm-static.tar usr/bin
+mv qemu-arm-static usr/bin
+tar -uvf qemu-arm-static.tar usr/bin/qemu-arm-static
+\end{bashcode}
+
+Si tout s'est bien passé, vous devriez obtenir une sortie similaire :
+
+\begin{bashcode}
+tar vtf qemu-arm-static.tar
+drwxrwxr-x gary/gary         0 2016-04-15 21:35 usr/
+drwxrwxr-x gary/gary         0 2016-04-15 21:35 usr/bin/
+-rwxr-xr-x gary/gary   2936324 2016-04-15 21:26 usr/bin/qemu-arm-static
+\end{bashcode}
+
+Il ne reste plus qu'à lancer le container :
+
+\begin{bashcode}
+docker build -t rpi-busybox-httpd .
+docker run -d -p 80:80 rpi-busybox-httpd # essayez un autre port s'il est déjà pris
+\end{bashcode}
+
+Rendez-vous ensuite sur \url{http://localhost:80} pour observer la page web.
 
 \begin{appendices}
-  \chapter{Script : Write system on SD}
+  \chapter{Script : Write system on SD}\label{write_system_sd}
 
   \inputminted[xleftmargin=20pt, linenos=true, breaklines=true, frame=single, framesep=6pt, tabsize=2, fontfamily=courier, fontsize=\small]{bash}{../write_system_on_sd.sh}
+  
+  \chapter{Building ArchLinux ARM packages on a PC using QEMU Chroot}\label{archlinux_arm_qemu_chroot}
+  
+\textbf{Source}: \url{https://github.com/RoEdAl/linux-raspberrypi-wsp/wiki/Building-ArchLinux-ARM-packages-ona-a-PC-using-QEMU-Chroot}
+
+On a PC witch ArchLinux or Manjaro installed:
+
+Build and install binfmt-support package.
+Build and install qemu-user-static package.
+Install arch-install-scripts package.
+
+Download and extract the root filesystem for Raspberry Pi or Raspberry Pi 2:
+
+\begin{bashcode}
+wget http://archlinuxarm.org/os/ArchLinuxARM-rpi-latest.tar.gz   
+bsdtar -xpf ArchLinuxARM-rpi-latest.tar.gz -C archlinux-rpi
+\end{bashcode}
+
+or
+
+\begin{bashcode}
+wget http://archlinuxarm.org/os/ArchLinuxARM-rpi-2-latest.tar.gz   
+bsdtar -xpf ArchLinuxARM-rpi-2-latest.tar.gz -C archlinux-rpi2
+\end{bashcode}
+
+Enable ARM to x86 translation:
+
+\begin{bashcode}    
+update-binfmts --enable qemu-arm
+\end{bashcode}
+
+
+Copy the \textbf{QEMU} executable:
+
+\begin{bashcode}
+cp /usr/bin/qemu-arm-static archlinux-rpi/usr/bin
+\end{bashcode}
+
+
+Chroot:
+
+\begin{bashcode}
+arch-chroot archlinux-rpi /bin/bash
+\end{bashcode}
+
+
+Install base-devel and distcc packages:
+
+\begin{bashcode}
+pacman -Suy base-devel distcc
+\end{bashcode}
+
+
+Exit and chroot again as normal alarm user:
+
+\begin{bashcode}
+exit
+arch-chroot archlinux-rpi runuser -l alarm
+\end{bashcode}
+
+
+Build your package.
 
 \end{appendices}
 \end{document}
