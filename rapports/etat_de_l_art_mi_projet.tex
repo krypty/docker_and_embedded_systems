@@ -81,7 +81,7 @@ Il est important de noter que la vitesse de développement de Docker est assez h
 De manière plus précise, ce projet vise à maitriser les parties suivantes:
 
 \begin{enumerate}
-  \item Construction d'un système Linux capable de faire tourner Docker et son \emph{daemon} en utilisant Buildroot. Pour générer le dit système, on dispose d'un \emph{repository} Gitlab hébergé à la Haute École de Fribourg.
+  \item Construction d'un système Linux capable de faire tourner Docker et son \emph{daemon} en utilisant Buildroot. Pour générer le dit système, on dispose d'un \emph{repository} Gitlab hébergé à la Haute École de Fribourg
 
   \item Cross compilation de Docker et de son \emph{daemon}, capable de faire tourner des containers
 \end{enumerate}
@@ -106,7 +106,7 @@ Toutes les ressources nécessaires à la génération du système se trouvent ic
   \item Le PDF \emph{01\_IntroOdroidXu3.pdf} du cours SeS
 \end{itemize}
 
-Le système généré, ne peut, dans sa configuration actuelle, permettre à Docker de se lancer. Pour pouvoir le faire, on a deux moyens à disposition : Buildroot et le kernel.
+Le système généré ne peut, dans sa configuration actuelle, permettre à Docker de se lancer. Pour pouvoir le faire, on a deux moyens à disposition : Buildroot et le kernel.
 
 Grossièrement, Buildroot permet d'ajouter des packages et de configurer son système      que le kernel permet d'ajouter des modules ou des drivers.
 
@@ -231,7 +231,7 @@ Comme on peut le voir à la figure \ref{fig_docker_in_docker}, pour compiler Doc
 
 Actuellement, il est possible de générer un binaire Docker x64 et ARM mais seule l'architecture x64 intègre le \emph{deamon} nécessaire à la création de containers.
 
-Le binaire ARM est dit CLIENT\_ONLY dans le sens où il peut être le client d'un \emph{deamon} Docker remote (instancié sur une autre machine).
+Le binaire ARM est dit \code{CLIENT\_ONLY} dans le sens où il peut être le client d'un \emph{deamon} Docker remote (instancié sur une autre machine).
 
 
 \section{Compiler directement sur une machine ARM en utilisant la manière officielle}
@@ -293,7 +293,7 @@ Comme on peut le voir à la figure \ref{fig_docker_qemu}, on reprend le même pr
     \label{fig_docker_qemu}
 \end{figure}
 
-La principale différence vient du fait qu'on encapsule le processus dans une machine virtuelle QEMU afin d'éviter de utiliser une carte ARM. Une fois le système émulé, on lance Docker pour compiler Docker.
+La principale différence vient du fait qu'on encapsule le processus dans une machine virtuelle QEMU afin d'éviter d'utiliser une carte ARM. Une fois le système émulé, on lance Docker pour compiler Docker.
 
 \subsection{Limitations}
 
@@ -336,7 +336,7 @@ Conclusion: aucune amélioration par rapport à la technique précédente. Impos
 
 \subsection{Principe utilisé}
 
-On va utiliser la commande \code{chroot}\footnote{chroot: \url{https://fr.wikipedia.org/wiki/Chroot}} afin d'isoler un machine QEMU dans un répertoire de notre machine de bureau.
+On va utiliser la commande \code{chroot}\footnote{chroot: \url{https://fr.wikipedia.org/wiki/Chroot}} afin d'isoler une machine QEMU dans un répertoire de notre machine de bureau.
 
 \subsection{Cheminement général}
 
@@ -348,7 +348,7 @@ Comme on peut le voir à la figure \ref{fig_chroot_qemu}, la première couche re
 
 Dans le répertoire \textit{archlinux\_rpi2}, on retrouve le système Archlinux ARM extrait dans lequel on vient copier \code{qemu-arm-static} permettant d'émuler le système ARM.
 
-En clair, tous les dossiers en dessus de \textit{archlinux\_rpi2} appartiennent à l'OS hôte et tous les fichiers en dessus, appartiennent au système invité, Archlinux ARM.
+En clair, tous les dossiers en dessus de \textit{archlinux\_rpi2} appartiennent à l'OS hôte et tous les fichiers en dessous, appartiennent au système invité, Archlinux ARM.
 
 \begin{figure}
 \begin{center}
@@ -361,7 +361,7 @@ En clair, tous les dossiers en dessus de \textit{archlinux\_rpi2} appartiennent 
 
 \subsection{Limitations}
 
-Bien que je suis parvenu à booter sur la machine virtuelle, je n'ai pas pu lancer la compilation de Docker car cette procédure à "détecté" que je me trouvais en \code{chroot} et s'est arrêtée.
+Bien que je sois parvenu à booter sur la machine virtuelle, je n'ai pas pu lancer la compilation de Docker car cette procédure à "détecté" que je me trouvais en \code{chroot} et s'est arrêtée.
 
 \section{Compiler Docker sans Docker}
 
@@ -427,7 +427,7 @@ Néanmoins, cette solution m'a permis de comprendre qu'il fallait peut-être mod
 
 Comme on a pu le voir, plusieurs techniques et tentatives ont été essayées. Aucune n'a permis de  compiler ou de cross compiler Docker pour obtenir un binaire ARM statiquement lié.
 
-Néanmoins, on sait que c'est possible car d'une part des distributions comme Archlinux ARM intègre un package Docker incluant le \textit{deamon} et d'une autre car on a pu mettre la main sur un binaire isolé, voir section \ref{binaire_arm}.
+Néanmoins, on sait que c'est possible car d'une part des distributions comme Archlinux ARM intègrent un package Docker incluant le \textit{deamon} et d'une autre car on a pu mettre la main sur un binaire isolé, voir section \ref{binaire_arm}.
 
 Encore une fois, il n'est pas impossible que l'équipe Docker supporte officiellement le \textit{deamon} pour la plateforme ARM d'ici quelques temps et ce document sera obsolète.
 
