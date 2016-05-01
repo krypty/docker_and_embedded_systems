@@ -13,10 +13,13 @@
 \usepackage[defaultlines=3,all]{nowidow}
 \usepackage[toc,page]{appendix}
 \usepackage{verbatim}
+\usepackage{float}
 
 % Header and Footer
 \usepackage{fancyhdr}
-\pagestyle{fancyplain}
+
+% style for all normal pages
+\fancypagestyle{normal}{
 \fancyhf{}
 \setlength\headheight{14pt}
 \lhead[]{Docker and Embedded systems}
@@ -25,9 +28,23 @@
 \cfoot[]{\thepage}
 \renewcommand{\headrulewidth}{0.4pt}% Default \headrulewidth is 0.4pt
 \renewcommand{\footrulewidth}{0.4pt}% default is 0pt
+}
+
+% style for history
+\fancypagestyle{historystyle}{
+\setlength\headheight{14pt}
+\lhead[]{Docker and Embedded systems}
+\chead[]{}
+\rhead{\includegraphics[width=3cm]{img/mse_logo}}
+\renewcommand{\headrulewidth}{0.4pt}% Default \headrulewidth is 0.4pt
+\renewcommand{\footrulewidth}{0pt}
+}
 
 \usepackage[hyphens]{url} % line wrap urls
 \usepackage{hyperref}
+
+% Version history
+\usepackage{vhistory}
 
 \newminted{bash}{xleftmargin=20pt, linenos=true, breaklines=true, frame=single, framesep=6pt, tabsize=2, fontfamily=courier, fontsize=\small}
 
@@ -41,29 +58,86 @@
 
 \newcommand{\code}[1]{\texttt{#1}} % inline code
 
-\title{État de l'art à la mi-projet de semestre Docker and embedded systems - Où comment ne pas cross compiler Docker sur ARM}
+\title{État de l'art à la mi-projet de semestre Docker and embedded systems - Ou comment ne pas cross compiler Docker sur ARM}
 \author{Gary \bsc{Marigliano}}
 
 \begin{document}
 
 \begin{titlepage}
-  \centering
-  \vfill
-  \LARGE \thetitle\\[0.8cm]
+\begin{center}
 
-  \Large \theauthor\\[0.8cm]
+\includegraphics[width=0.6\textwidth]{img/docker_logo}\\[1cm]
 
-  \normalsize \today 
+\begin{figure}[htbp]
+\begin{minipage}[c]{.45\linewidth}
+\begin{flushleft}
+\includegraphics[width=7cm]{img/mse_logo}
+\end{flushleft}
+\end{minipage}
+\hfill
+\begin{minipage}[c]{.45\linewidth}
+\begin{flushright}
+\includegraphics[height=2cm]{img/logo_hes-so}
+\end{flushright}
+\end{minipage}
+\end{figure}
 
-  Version 0.0.1
-  \vfill
-  \includegraphics[width=8cm]{img/docker_logo}
-  \vfill
+% Title
+\rule{\linewidth}{0.5mm} \\[0.4cm]
+{ \huge \bfseries \thetitle \\[0.4cm] }
+\rule{\linewidth}{0.5mm} \\[1.5cm]
+
+% Author and supervisor
+\noindent
+\begin{minipage}{0.4\textwidth}
+  \begin{flushleft} \large
+    \emph{Auteur :}\\
+    \theauthor
+  \end{flushleft}
+\end{minipage}%
+\begin{minipage}{0.4\textwidth}
+  \begin{flushright} \large
+    \emph{Encadrant :} \\
+    Jean-Roland \bsc{Schüler}
+  \end{flushright}
+\end{minipage}
+
+\vfill
+
+\noindent
+\begin{minipage}{0.4\textwidth}
+  \begin{flushleft} \large
+    \emph{Contact :}\\
+    gary.marigliano@master.hes-so.ch
+  \end{flushleft}
+\end{minipage}%
+\begin{minipage}{0.4\textwidth}
+  \begin{flushright} \large
+    \emph{Mandant :} \\
+    Haute école d'ingénierie et d'architecture de Fribourg
+  \end{flushright}
+\end{minipage}
+
+\vfill
+
+% Bottom of the page
+{\large Version 0.0.2 \\ \today}
+
+\end{center}
 \end{titlepage}
+
+\pagestyle{historystyle}
+\begin{versionhistory}  
+  \vhEntry{0.0.1}{15.04.16}{\theauthor}{Création du document}
+  \vhEntry{0.0.2}{01.05.16}{\theauthor}{Modifications première page, ajout historique, repositionnement des images}
+\end{versionhistory}
+
 
 \pagenumbering{gobble}
 \tableofcontents
 \pagenumbering{arabic}
+
+\pagestyle{normal}
 
 \chapter{Introduction}
 
@@ -219,9 +293,9 @@ Le binaire se trouve dans le dossier ./bundle. On se place volontairement sur un
 
 Comme on peut le voir à la figure \ref{fig_docker_in_docker}, pour compiler Docker, il faut disposer de Docker sur son PC. En faisant une commande \code{make}, Docker va créer un container basé sur une image Ubuntu et va installer tous les outils de compilation nécessaires. Une fois que cela est fait, Docker utilise ce container pour lancer la compilation. Le binaire est ensuite récupéré dans le dossier \code{./bundle}. Il ne reste plus qu'à copier le binaire sur la cible.
 
-\begin{figure}
+\begin{figure}[H]
     \begin{center}
-        \includegraphics[scale=0.6]{img/docker_in_docker}
+        \includegraphics[scale=0.5]{img/docker_in_docker}
     \end{center}
     \caption{Docker in Docker}
     \label{fig_docker_in_docker}
@@ -285,9 +359,9 @@ Je vais pas m'étendre sur cette solution, car Debian ARM ne propose pas de pack
 
 Comme on peut le voir à la figure \ref{fig_docker_qemu}, on reprend le même principe qu'expliqué à la section: \nameref{maniere_officielle}.
 
-\begin{figure}
+\begin{figure}[H]
     \begin{center}
-        \includegraphics[scale=0.6]{img/docker_qemu}
+        \includegraphics[scale=0.5]{img/docker_qemu}
     \end{center}
     \caption{Docker QEMU}
     \label{fig_docker_qemu}
@@ -350,9 +424,9 @@ Dans le répertoire \textit{archlinux\_rpi2}, on retrouve le système Archlinux 
 
 En clair, tous les dossiers en dessus de \textit{archlinux\_rpi2} appartiennent à l'OS hôte et tous les fichiers en dessous, appartiennent au système invité, Archlinux ARM.
 
-\begin{figure}
+\begin{figure}[H]
 \begin{center}
-        \includegraphics[scale=0.75]{img/chroot_archlinux_rpi}
+        \includegraphics[scale=0.6]{img/chroot_archlinux_rpi}
         \caption{Docker QEMU}
         \label{fig_chroot_qemu}
     \end{center}
@@ -400,7 +474,7 @@ export DOCKER_BUILDTAGS='exclude_graphdriver_devicemapper'
 
 \subsection{Schéma}
 
-\begin{figure}
+\begin{figure}[H]
     \begin{center}
         \includegraphics[scale=0.6]{img/docker_without_docker}
     \end{center}
