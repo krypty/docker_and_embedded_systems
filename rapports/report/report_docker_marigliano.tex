@@ -15,7 +15,7 @@
 \usepackage{verbatim}
 \usepackage{float}
 
-% Header and Footer
+% == Header and Footer
 \usepackage{fancyhdr}
 
 % style for all normal pages
@@ -43,12 +43,17 @@
 \usepackage[hyphens]{url} % line wrap urls
 \usepackage{hyperref}
 
-% Version history
+% == Version history
 \usepackage{vhistory}
 
+
+% == Code snippets
 \newminted{bash}{xleftmargin=20pt, linenos=true, breaklines=true, frame=single, framesep=6pt, tabsize=2, fontfamily=courier, fontsize=\small}
 
-% Chapter titles
+% inline code
+\newcommand{\code}[1]{\texttt{#1}}
+
+% == Chapter titles
 % Remove space before title
 \titlespacing{\chapter}{0pt}{*-4}{*3}
 % Remove "Chapter N" and use a sans-serif font
@@ -56,7 +61,10 @@
 % Change chapter page style
 \patchcmd{\chapter}{plain}{fancy}{}{}
 
-\newcommand{\code}[1]{\texttt{#1}} % inline code
+
+% Metadata
+\newcommand{\school}{Haute École d'ingénierie et d'architecture de Fribourg}
+\newcommand{\oldreportname}{État de l’art à la mi-projet de semestre Docker and embedded systems - Ou comment ne pas cross compiler Docker sur ARM}
 
 \title{Projet de semestre Docker and embedded systems}
 \author{Gary \bsc{Marigliano}}
@@ -114,7 +122,7 @@
 \begin{minipage}{0.4\textwidth}
   \begin{flushright} \large
     \emph{Mandant :} \\
-    Haute école d'ingénierie et d'architecture de Fribourg
+    \school
   \end{flushright}
 \end{minipage}
 
@@ -142,7 +150,7 @@
 
 \section{Contexte}\label{contexte}
 
-Ce document s'inscrit dans le cadre du projet de semestre Docker and embedded systems actuellement réalisé par moi-même. Un des buts de ce projet est de cross compiler Docker à partir de ses sources pour produire un binaire exécutable sur un Odroid XU3 (ARMv7). De plus, une partie concernant la sécurité de Docker sera également traitée.
+Ce document est le rapport de fin de projet de semestre Docker and embedded systems. Un des buts de ce projet est de cross compiler Docker à partir de ses sources pour produire un binaire exécutable sur un Odroid XU3 (ARMv7). De plus, une partie concernant la sécurité de Docker est également traitée.
 
 Lien: \url{https://github.com/krypty/docker_and_embedded_systems}
 
@@ -154,27 +162,104 @@ Il est important de noter que la vitesse de développement de Docker est assez h
 De manière plus précise, ce projet vise à maitriser les parties suivantes:
 
 \begin{enumerate}
-  \item Construction d'un système Linux capable de faire tourner Docker et son \emph{daemon} en utilisant Buildroot. Pour générer le dit système, on dispose d'un \emph{repository} Gitlab hébergé à la Haute École de Fribourg
+  \item Construction d'un système Linux capable de faire tourner Docker et son \emph{daemon} en utilisant Buildroot. Pour générer le dit système, on dispose d'un \emph{repository} Gitlab hébergé à la \school
 
   \item Cross compilation de Docker et de son \emph{daemon}, capable de faire tourner des containers
   
   \item Comprendre, analyser et évaluer l'aspect sécurité de Docker dans le cadre d'une utilisation avec une carte embarquée
 \end{enumerate}
 
-Les deux premiers points ont été traités dans un précédent rapport appelé "État de l’art à la mi-projet de semestre Docker and embedded systems - Ou comment ne pas cross compiler Docker sur ARM".
+Les deux premiers points ont été traités dans un précédent rapport appelé "\oldreportname".
 
 Ce document se concentre, dès lors, sur le dernier point ainsi que sur le déroulement global du projet.
 
+\chapter{Présentation de Docker}
+
+\textbf{Remarque : } Si le lecteur a déjà lu le rapport "\oldreportname", il ne lui est pas nécessaire de relire ce chapitre sachant qu'il s'agit du même contenu.
+
+TODO: inclure un .tex séparé commun aux deux rapports
 
 \chapter{Objectif 3 - TODO}
 
+\section{Situation actuelle}
+TODO: dire qu'on part d'une distribution Archlinux ARM et qu'on utilise un Odroid XU3 car pas réussi à cross compiler Docker. Tout comme cela avait été fait pour le travail de Bachelor précédent.
+
+
+\section{Structure de la suite du document}
+
+Pour ce projet, il a été décidé d'étudier la question de la sécurité avec Docker avec une approche en couches. A peu à la manière du modèle OSI\footnote{Modèle OSI: \url{https://fr.wikipedia.org/wiki/Mod\%C3\%A8le_OSI}} en réseau, chaque couche représente un ensemble de fonctionnalités qui, dans le cas de ce projet, doit faire l'objet d'une évaluation de la sécurité.
+
+L'étude de la sécurité de Docker a donc été séparée avec les couches arbitraires suivantes:
+
+\begin{itemize}
+
+\item Compilation et installation de Docker : en particulier les options  de compilation
+
+\item \nameref{config_systeme_os_hote} : configuration du kernel, configuration des options de lancement de Docker, etc.
+
+\item \nameref{creation_utilisation_images_docker} : Bonnes pratiques et contraintes liées au monde de l'embarqué
+
+\item \nameref{utilisation_containers}
+
+\end{itemize}
+
+\textbf{Remarque : } Chacune de ces couches fait l'objet d'un chapitre dans ce rapport excepté le premier point : Compilation et installation de Docker. En effet, celui-ci n'est pas traité car, comme annoncé précédemment, la cross compilation de Docker sur un système ARM n'a pas aboutie. L'effort est alors concentré sur les autres points.
+
+
+\chapter{Configuration du système d'exploitation hôte}\label{config_systeme_os_hote}
+
 TODO TODO TODO TODO TODO TODO TODO TODO TODO 
+Dans ce chapitre, on présente diverses bonnes pratiques et configurations dans le but de sécuriser Docker et/ou le système l'hébergeant.
+
+Parmi ces techniques, on peut citer :
+
+\begin{itemize}
+\item TODO
+\item TODO
+\end{itemize}
+
+\section{Passage en revue du benchmark de sécurité : CIS Docker 1.11.0 Benchmark}
+
+TODO décrire ce que c'est ce bench, énumerer les points testés et en explorer un certain nombre
+
+\subsection{Ne pas utiliser AUFS}
+
+TODO
+
+\subsection{User namespace}
+
+TODO
+
+\subsection{Interdiction de la communication réseau entre containers}
+
+TODO
+
+\section{Séparation des données Docker dans une partition chiffrée}
+
+TODO
 
 \section{TODO}
 
+TODO
+
+\chapter{Création et utilisation des images Docker}\label{creation_utilisation_images_docker}
+
+TODO
+
+\chapter{Utilisation des containers}\label{utilisation_containers}
+
+TODO
+
+
+% == Bibliography
+\nocite{*} % cite all
+\bibliographystyle{plain}
+\bibliography{bibliography}
 
 \begin{appendices}
   \chapter{TODO}
 
+    TODO
 \end{appendices}
+
 \end{document}
