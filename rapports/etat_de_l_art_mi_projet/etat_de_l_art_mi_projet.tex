@@ -13,7 +13,7 @@
 \usepackage[defaultlines=3,all]{nowidow}
 \usepackage[toc,page]{appendix}
 \usepackage{verbatim}
-\usepackage{float}
+\usepackage{float} % image positioning
 
 % Header and Footer
 \usepackage{fancyhdr}
@@ -58,8 +58,10 @@
 
 \newcommand{\code}[1]{\texttt{#1}} % inline code
 
+% metadata
 \title{État de l'art à la mi-projet de semestre Docker and embedded systems - Ou comment ne pas cross compiler Docker sur ARM}
 \author{Gary \bsc{Marigliano}}
+\newcommand{\school}{Haute École d'ingénierie et d'architecture de Fribourg}
 
 \begin{document}
 
@@ -114,7 +116,7 @@
 \begin{minipage}{0.4\textwidth}
   \begin{flushright} \large
     \emph{Mandant :} \\
-    Haute école d'ingénierie et d'architecture de Fribourg
+    \school
   \end{flushright}
 \end{minipage}
 
@@ -155,7 +157,7 @@ Il est important de noter que la vitesse de développement de Docker est assez h
 De manière plus précise, ce projet vise à maitriser les parties suivantes:
 
 \begin{enumerate}
-  \item Construction d'un système Linux capable de faire tourner Docker et son \emph{daemon} en utilisant Buildroot. Pour générer le dit système, on dispose d'un \emph{repository} Gitlab hébergé à la Haute École de Fribourg
+  \item Construction d'un système Linux capable de faire tourner Docker et son \emph{daemon} en utilisant Buildroot. Pour générer le dit système, on dispose d'un \emph{repository} Gitlab hébergé à la \school
 
   \item Cross compilation de Docker et de son \emph{daemon}, capable de faire tourner des containers
 \end{enumerate}
@@ -170,7 +172,7 @@ Dans cette partie, on verra les ingrédients et pistes à suivre pour concevoir 
 
 \section{Générer le système}
 
-Comme évoqué à la section \ref{contexte}, on dispose d'un Odroid XU3 sur lequel il faut générer un système GNU/Linux. Dans le cadre d'un cours, la Haute École de Fribourg met à disposition un \emph{repository} git qui contient tout ce qu'il faut pour gérérer un tel système.
+Comme évoqué à la section \ref{contexte}, on dispose d'un Odroid XU3 sur lequel il faut générer un système GNU/Linux. Dans le cadre d'un cours, la \school met à disposition un \emph{repository} git qui contient tout ce qu'il faut pour gérérer un tel système.
 
 Toutes les ressources nécessaires à la génération du système se trouvent ici :
 
