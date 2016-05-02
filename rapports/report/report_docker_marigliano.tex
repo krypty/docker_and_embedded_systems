@@ -1,0 +1,180 @@
+% inspired from: https://github.com/SnipyJulmy/hesso-latextemplate-lab
+\documentclass[11pt,a4paper,oneside]{report}
+\usepackage[margin=2cm]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{minted}
+\usepackage{titlesec}
+\usepackage[pdftex]{graphicx} % graphics importing
+\usepackage{titling} % can use \theauthor \thetitle
+\usepackage{parskip} % remove first line indenting in a section
+\usepackage{microtype} % typographic improvements
+\usepackage[defaultlines=3,all]{nowidow}
+\usepackage[toc,page]{appendix}
+\usepackage{verbatim}
+\usepackage{float}
+
+% Header and Footer
+\usepackage{fancyhdr}
+
+% style for all normal pages
+\fancypagestyle{normal}{
+\fancyhf{}
+\setlength\headheight{14pt}
+\lhead[]{Docker and Embedded systems}
+\chead[]{}
+\rhead{\includegraphics[width=3cm]{img/mse_logo}}
+\cfoot[]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}% Default \headrulewidth is 0.4pt
+\renewcommand{\footrulewidth}{0.4pt}% default is 0pt
+}
+
+% style for history
+\fancypagestyle{historystyle}{
+\setlength\headheight{14pt}
+\lhead[]{Docker and Embedded systems}
+\chead[]{}
+\rhead{\includegraphics[width=3cm]{img/mse_logo}}
+\renewcommand{\headrulewidth}{0.4pt}% Default \headrulewidth is 0.4pt
+\renewcommand{\footrulewidth}{0pt}
+}
+
+\usepackage[hyphens]{url} % line wrap urls
+\usepackage{hyperref}
+
+% Version history
+\usepackage{vhistory}
+
+\newminted{bash}{xleftmargin=20pt, linenos=true, breaklines=true, frame=single, framesep=6pt, tabsize=2, fontfamily=courier, fontsize=\small}
+
+% Chapter titles
+% Remove space before title
+\titlespacing{\chapter}{0pt}{*-4}{*3}
+% Remove "Chapter N" and use a sans-serif font
+\titleformat{\chapter}{\normalfont\huge}{\thechapter.}{20pt}{\huge}
+% Change chapter page style
+\patchcmd{\chapter}{plain}{fancy}{}{}
+
+\newcommand{\code}[1]{\texttt{#1}} % inline code
+
+\title{Projet de semestre Docker and embedded systems}
+\author{Gary \bsc{Marigliano}}
+
+\begin{document}
+
+\begin{titlepage}
+\begin{center}
+
+\includegraphics[width=0.6\textwidth]{img/docker_logo}\\[1cm]
+
+\begin{figure}[htbp]
+\begin{minipage}[c]{.45\linewidth}
+\begin{flushleft}
+\includegraphics[width=7cm]{img/mse_logo}
+\end{flushleft}
+\end{minipage}
+\hfill
+\begin{minipage}[c]{.45\linewidth}
+\begin{flushright}
+\includegraphics[height=2cm]{img/logo_hes-so}
+\end{flushright}
+\end{minipage}
+\end{figure}
+
+% Title
+\rule{\linewidth}{0.5mm} \\[0.4cm]
+{ \huge \bfseries \thetitle \\[0.4cm] }
+\rule{\linewidth}{0.5mm} \\[1.5cm]
+
+% Author and supervisor
+\noindent
+\begin{minipage}{0.4\textwidth}
+  \begin{flushleft} \large
+    \emph{Auteur :}\\
+    \theauthor
+  \end{flushleft}
+\end{minipage}%
+\begin{minipage}{0.4\textwidth}
+  \begin{flushright} \large
+    \emph{Encadrant :} \\
+    Jean-Roland \bsc{Schüler}
+  \end{flushright}
+\end{minipage}
+
+\vfill
+
+\noindent
+\begin{minipage}{0.4\textwidth}
+  \begin{flushleft} \large
+    \emph{Contact :}\\
+    gary.marigliano@master.hes-so.ch
+  \end{flushleft}
+\end{minipage}%
+\begin{minipage}{0.4\textwidth}
+  \begin{flushright} \large
+    \emph{Mandant :} \\
+    Haute école d'ingénierie et d'architecture de Fribourg
+  \end{flushright}
+\end{minipage}
+
+\vfill
+
+% Bottom of the page
+{\large Version 0.0.1 \\ \today}
+
+\end{center}
+\end{titlepage}
+
+\pagestyle{historystyle}
+\begin{versionhistory}  
+  \vhEntry{0.0.1}{02.05.16}{\theauthor}{Création du document}
+\end{versionhistory}
+
+
+\pagenumbering{gobble}
+\tableofcontents
+\pagenumbering{arabic}
+
+\pagestyle{normal}
+
+\chapter{Introduction}
+
+\section{Contexte}\label{contexte}
+
+Ce document s'inscrit dans le cadre du projet de semestre Docker and embedded systems actuellement réalisé par moi-même. Un des buts de ce projet est de cross compiler Docker à partir de ses sources pour produire un binaire exécutable sur un Odroid XU3 (ARMv7). De plus, une partie concernant la sécurité de Docker sera également traitée.
+
+Lien: \url{https://github.com/krypty/docker_and_embedded_systems}
+
+Il est important de noter que la vitesse de développement de Docker est assez hallucinante. En effet, sur Github (\url{https://github.com/docker/docker}) les commits se succèdent à vitesse grand V. Entre chaque version de Docker qui sortent environ tous les mois, il est courant d'avoir plus de 3000 commits qui ont été \emph{pushés}. Tout ceci pour dire qu'à la lecture de ce document, il est quasiment sûr que certaines pistes explorées soient définitivement obsolètes ou au contraire deviennent la voie à suivre du à une mise à jour quelconque.
+
+
+\section{Objectifs}
+
+De manière plus précise, ce projet vise à maitriser les parties suivantes:
+
+\begin{enumerate}
+  \item Construction d'un système Linux capable de faire tourner Docker et son \emph{daemon} en utilisant Buildroot. Pour générer le dit système, on dispose d'un \emph{repository} Gitlab hébergé à la Haute École de Fribourg
+
+  \item Cross compilation de Docker et de son \emph{daemon}, capable de faire tourner des containers
+  
+  \item Comprendre, analyser et évaluer l'aspect sécurité de Docker dans le cadre d'une utilisation avec une carte embarquée
+\end{enumerate}
+
+Les deux premiers points ont été traités dans un précédent rapport appelé "État de l’art à la mi-projet de semestre Docker and embedded systems - Ou comment ne pas cross compiler Docker sur ARM".
+
+Ce document se concentre, dès lors, sur le dernier point ainsi que sur le déroulement global du projet.
+
+
+\chapter{Objectif 3 - TODO}
+
+TODO TODO TODO TODO TODO TODO TODO TODO TODO 
+
+\section{TODO}
+
+
+\begin{appendices}
+  \chapter{TODO}
+
+\end{appendices}
+\end{document}
