@@ -25,7 +25,9 @@
 \lhead[]{Docker and Embedded systems}
 \chead[]{}
 \rhead{\includegraphics[width=3cm]{img/mse_logo}}
+\lfoot[]{}
 \cfoot[]{\thepage}
+\rfoot[]{}
 \renewcommand{\headrulewidth}{0.4pt}% Default \headrulewidth is 0.4pt
 \renewcommand{\footrulewidth}{0.4pt}% default is 0pt
 }
@@ -36,6 +38,10 @@
 \lhead[]{Docker and Embedded systems}
 \chead[]{}
 \rhead{\includegraphics[width=3cm]{img/mse_logo}}
+\lfoot[]{}
+\cfoot[]{}
+\rfoot[]{}
+
 \renewcommand{\headrulewidth}{0.4pt}% Default \headrulewidth is 0.4pt
 \renewcommand{\footrulewidth}{0pt}
 }
@@ -60,6 +66,7 @@
 \titleformat{\chapter}{\normalfont\huge}{\thechapter.}{20pt}{\huge}
 % Change chapter page style
 \patchcmd{\chapter}{plain}{fancy}{}{}
+
 
 
 % Metadata
@@ -140,6 +147,10 @@
 \end{versionhistory}
 
 
+\chapter{Résumé du document}
+
+TODO
+
 \pagenumbering{gobble}
 \tableofcontents
 \pagenumbering{arabic}
@@ -173,13 +184,16 @@ Les deux premiers points ont été traités dans un précédent rapport appelé 
 
 Ce document se concentre, dès lors, sur le dernier point ainsi que sur le déroulement global du projet.
 
+
 \chapter{Présentation de Docker}
 
 \textbf{Remarque : } Si le lecteur a déjà lu le rapport "\oldreportname", il ne lui est pas nécessaire de relire ce chapitre sachant qu'il s'agit du même contenu.
 
-TODO: inclure un .tex séparé commun aux deux rapports
-
 \input{../presentation-docker}
+
+\chapter{Matériel utilisé et mise en place de la cible}
+
+TODO présentation de Odroid XU3 + OS utilisé + formattage de la SD + installation de Docker sur Archlinux ARM
 
 \chapter{Objectif 3 - TODO}
 
@@ -216,7 +230,7 @@ Dans ce chapitre, on présente diverses bonnes pratiques et configurations dans 
 Parmi ces techniques, on peut citer :
 
 \begin{itemize}
-\item TODO
+\item TODOchaptertitle
 \item TODO
 \end{itemize}
 
@@ -252,7 +266,19 @@ TODO
 
 TODO
 
+\chapter{Déroulement du projet}
 
+\section{Planning initial}
+
+TODO
+
+\section{Planning final}
+
+TODO
+
+\chapter{Proposition d'améliorations vis à vis du travail précédent}
+
+TODO: passer en revue et critique positivement le travail de Bachelor précédent. Dire que ce n'est pas une critique négative mais apporter un avis supplémentaire et plus récent (Docker évoluant beaucoup)
 % == Bibliography
 \nocite{*} % cite all
 \bibliographystyle{plain}
