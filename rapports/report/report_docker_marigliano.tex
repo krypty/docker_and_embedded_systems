@@ -14,6 +14,7 @@
 \usepackage[toc,page]{appendix}
 \usepackage{verbatim}
 \usepackage{float}
+\usepackage{enumerate}
 
 % == Header and Footer
 \usepackage{fancyhdr}
@@ -75,6 +76,9 @@
 
 \title{Projet de semestre Docker and embedded systems}
 \author{Gary \bsc{Marigliano}}
+
+% aliases
+\newcommand{\odroid}{ODROID-XU3 Lite }
 
 \begin{document}
 
@@ -161,9 +165,11 @@ TODO
 
 \section{Contexte}\label{contexte}
 
-Ce document est le rapport de fin de projet de semestre Docker and embedded systems. Un des buts de ce projet est de cross compiler Docker à partir de ses sources pour produire un binaire exécutable sur un Odroid XU3 (ARMv7). De plus, une partie concernant la sécurité de Docker est également traitée.
+Ce document est le rapport de fin de projet de semestre Docker and embedded systems. Un des buts de ce projet est de cross compiler Docker à partir de ses sources pour produire un binaire exécutable sur un \odroid (ARMv7). De plus, une partie concernant la sécurité de Docker est également traitée.
 
 Lien: \url{https://github.com/krypty/docker_and_embedded_systems}
+
+Ce projet de semestre s'inscrit dans une certaine continuité avec les projets de semestre et de bachelor de M. Loic Bassang \cite{TODO}. Plusieurs pistes intéressantes avaient en effet été mentionnées dans ces projets là notamment une partie concernant la sécurité et Docker. Ainsi, ce rapport fera parfois des parallèles avec ces documents.
 
 Il est important de noter que la vitesse de développement de Docker est assez hallucinante. En effet, sur Github (\url{https://github.com/docker/docker}) les commits se succèdent à vitesse grand V. Entre chaque version de Docker qui sortent environ tous les mois, il est courant d'avoir plus de 3000 commits qui ont été \emph{pushés}. Tout ceci pour dire qu'à la lecture de ce document, il est quasiment sûr que certaines pistes explorées soient définitivement obsolètes ou au contraire deviennent la voie à suivre du à une mise à jour quelconque.
 
@@ -193,11 +199,42 @@ Ce document se concentre, dès lors, sur le dernier point ainsi que sur le déro
 
 \chapter{Matériel utilisé et mise en place de la cible}
 
-TODO présentation de Odroid XU3 + OS utilisé + formattage de la SD + installation de Docker sur Archlinux ARM
+Ce chapitre présente le matériel utilisé dans le projet ainsi que son installation et sa configuration de base.
+
+Afin de réaliser ce projet, une carte embarquée \odroid a été mise à disposition afin d'y faire tourner Docker. 
+
+\section{La carte \odroid}
+
+Cette carte possède les caractéristiques suivantes \cite{TODO}: 
+
+\begin{itemize}
+\item Samsung Exynos5422 Cortex™-A15 1.8Ghz quad core and Cortex™-A7 quad core CPUs 
+\item Mali-T628 MP6(OpenGL ES 3.0/2.0/1.1 and OpenCL 1.1 Full profile)
+\item 2Gbyte LPDDR3 RAM at 933MHz (14.9GB/s memory bandwidth) PoP stacked
+\item eMMC5.0 HS400 Flash Storage
+\item USB 3.0 Host x 1, USB 3.0 OTG x 1, USB 2.0 Host x 4
+\item HDMI 1.4a for display
+\end{itemize}
+
+\begin{figure}[hbtp]
+\centering
+\includegraphics[scale=0.5]{img/ODROIDXU3Lite.jpg}
+\caption{\odroid}
+\end{figure}
+
+\section{Installation}
+
+Initialement, il était prévu de générer un système d'exploitation minimal qui aurait été capable de faire tourner Docker et des containers. Malheureusement, il n'a pas été possible de cross compiler Docker \textit{et son daemon} afin de lancer des containers sur ce système minimal. Plus d'informations sont disponibles dans le rapport \oldreportname. 
+
+Ainsi, il a été décidé, de la même manière que pour le travail de bachelor précédent, d'utiliser une distribution GNU/Linux proposant Docker dans ses packages. Le choix s'est donc porté sur \textbf{Archlinux ARM} \cite{TODO}.
+
+Sur la page wiki de la distribution (\url{https://archlinuxarm.org/platforms/armv7/samsung/odroid-xu3}), on peut suivre un guide de génération de la carte SD qui contient le système d'exploitation. Ce guide est disponible à l'appendice \ref{install_alarm_odroid}.
 
 \chapter{Objectif 3 - TODO}
 
 \section{Situation actuelle}
+TODO: rappeler les objectifs, en particulier l'objectif courant (le 3)...
+
 TODO: dire qu'on part d'une distribution Archlinux ARM et qu'on utilise un Odroid XU3 car pas réussi à cross compiler Docker. Tout comme cela avait été fait pour le travail de Bachelor précédent.
 
 
@@ -285,9 +322,14 @@ TODO: passer en revue et critique positivement le travail de Bachelor précéden
 \bibliography{bibliography}
 
 \begin{appendices}
-  \chapter{TODO}
+\chapter{Installation de Archlinux ARM sur \odroid}\label{install_alarm_odroid}
 
-    TODO
+\textbf{Remarque : }Ce guide requiert l'utilisation d'un ordinateur sous GNU/Linux.
+
+Source : \url{https://archlinuxarm.org/platforms/armv7/samsung/odroid-xu3}
+
+\input{appendices/archlinux_arm_odroid_xu3_install}
+
 \end{appendices}
 
 \end{document}

@@ -1,0 +1,115 @@
+\section{Micro SD Card Creation}
+
+Replace sdX in the following instructions with the device name for the SD card as it appears on your computer.
+
+\begin{enumerate}
+
+\item Zero the beginning of the SD card:
+
+\begin{bashcode}
+dd if=/dev/zero of=/dev/sdX bs=1M count=8
+\end{bashcode}
+
+
+\item Start fdisk to partition the SD card:
+
+\begin{bashcode}
+fdisk /dev/sdX
+\end{bashcode}
+ 
+
+\item At the fdisk prompt, create the new partitions:
+	\begin{enumerate}[a.]
+		        \item Type o. This will clear out any partitions on the drive.
+		        \item Type p to list partitions. There should be no partitions left.
+		        \item Type n, then p for primary, 1 for the first partition on the drive, and enter twice to accept the default starting and ending sectors.
+		        \item Write the partition table and exit by typing w.
+	\end{enumerate}
+\item Create and mount the ext4 filesystem:
+
+\begin{bashcode}
+mkfs.ext4 /dev/sdX1
+mkdir root
+mount /dev/sdX1 root
+\end{bashcode}
+
+
+\item Download and extract the root filesystem (as root, not via sudo):
+
+\begin{bashcode}
+wget http://os.archlinuxarm.org/os/ArchLinuxARM-odroid-xu3-latest.tar.gz
+bsdtar -xpf ArchLinuxARM-odroid-xu3-latest.tar.gz -C root
+\end{bashcode}
+
+\item Flash the bootloader files:
+
+\begin{bashcode}
+cd root/boot
+sh sd_fusing.sh /dev/sdX
+cd ../..
+\end{bashcode}
+
+
+\item    (Optional) Set the MAC address for the onboard ethernet controller:
+    \begin{enumerate}[a.]
+        \item Open the file root/boot/boot.ini with a text editor.
+        \item Change the MAC address being set by the setenv macaddr command to the desired address.
+        \item Save and close the file.
+    \end{enumerate}
+
+\item    Unmount the partition:
+
+    umount root
+
+\item    Set the boot switches on the ODROID-XU3 board to boot from SD:
+    \begin{enumerate}[a.]
+        \item With the board oriented so you can read the ODROID-XU3 on the silkscreen, locate the two tiny switches to the left of the ethernet jack.
+        \item The first switch (left) should be in the off position, which is down.
+        \item The second switch (right) should be in the on position, which is up.
+    \end{enumerate}
+    
+\item    Insert the micro SD card into the XU3, connect ethernet, and apply 5V power.
+\item    Use the serial console (with a null-modem adapter if needed) or SSH to the IP address given to the board by your router.
+    \begin{itemize}
+        \item Login as the default user alarm with the password alarm.
+        \item The default root password is root.
+    \end{itemize}
+
+\end{enumerate}
+
+\section{eMMC Module Creation}
+
+\begin{enumerate}
+\item    Attach the eMMC module to the micro SD adapter, and plug that into your computer.
+
+\item    Follow the above steps to install Arch Linux ARM, and boot the board with the eMMC still attached to micro SD adapter, plugged into the SD slot in the board.
+
+\item    Re-flash the bootloader to the protected boot area of the eMMC module:
+\begin{bashcode}
+cd /boot
+./sd_fusing.sh /dev/mmcblk0
+\end{bashcode}
+
+\item    Power off the board:
+\begin{bashcode}
+poweroff
+\end{bashcode}
+
+\item    Remove the micro SD adapter, and detach the eMMC module.
+
+\item    Set the boot switches on the ODROID-XU3 board to boot from eMMC:
+    \begin{enumerate}[a.]
+        \item With the board oriented so you can read the ODROID-XU3 on the silkscreen, locate the two tiny switches to the left of the ethernet jack.
+        \item The first switch (left) should be in the on position, which is up.
+        \item The second switch (right) should be in the on position, which is up.
+    \end{enumerate}
+    
+\item    Connect the eMMC module to the XU3, ensuring you hear a click when doing so, connect ethernet, and apply 5V power.
+
+\item    Use the serial console (with a null-modem adapter if needed) or SSH to the IP address given to the board by your router.
+    \begin{itemize}
+        \item Login as the default user alarm with the password alarm.
+        \item The default root password is root.
+    \end{itemize}
+
+\end{enumerate}
