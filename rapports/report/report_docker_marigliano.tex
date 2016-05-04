@@ -171,7 +171,7 @@ Lien: \url{https://github.com/krypty/docker_and_embedded_systems}
 
 Ce projet de semestre s'inscrit dans une certaine continuité avec les projets de semestre et de bachelor de M. Loic Bassang \cite{TODO}. Plusieurs pistes intéressantes avaient en effet été mentionnées dans ces projets là notamment une partie concernant la sécurité et Docker. Ainsi, ce rapport fera parfois des parallèles avec ces documents.
 
-Il est important de noter que la vitesse de développement de Docker est assez hallucinante. En effet, sur Github (\url{https://github.com/docker/docker}) les commits se succèdent à vitesse grand V. Entre chaque version de Docker qui sortent environ tous les mois, il est courant d'avoir plus de 3000 commits qui ont été \emph{pushés}. Tout ceci pour dire qu'à la lecture de ce document, il est quasiment sûr que certaines pistes explorées soient définitivement obsolètes ou au contraire deviennent la voie à suivre du à une mise à jour quelconque.
+Il est important de noter que la vitesse de développement de Docker est assez hallucinante. En effet, sur Github (\url{https://github.com/docker/docker}) les commits se succèdent à vitesse grand V. Entre chaque version de Docker, qui sortent environ tous les mois, il est courant d'avoir plus de 3000 commits qui ont été \emph{pushés}. Tout ceci pour dire qu'à la lecture de ce document, il est quasiment sûr que certaines pistes explorées soient définitivement obsolètes ou au contraire deviennent la voie à suivre du à une mise à jour quelconque.
 
 
 \section{Objectifs}
@@ -222,13 +222,51 @@ Cette carte possède les caractéristiques suivantes \cite{TODO}:
 \caption{\odroid}
 \end{figure}
 
-\section{Installation}
+Lien vers le constructeur : \url{http://www.hardkernel.com/main/products/prdt_info.php?g_code=G141351880955}.
+
+\section{Installation du système}
 
 Initialement, il était prévu de générer un système d'exploitation minimal qui aurait été capable de faire tourner Docker et des containers. Malheureusement, il n'a pas été possible de cross compiler Docker \textit{et son daemon} afin de lancer des containers sur ce système minimal. Plus d'informations sont disponibles dans le rapport \oldreportname. 
 
 Ainsi, il a été décidé, de la même manière que pour le travail de bachelor précédent, d'utiliser une distribution GNU/Linux proposant Docker dans ses packages. Le choix s'est donc porté sur \textbf{Archlinux ARM} \cite{TODO}.
 
-Sur la page wiki de la distribution (\url{https://archlinuxarm.org/platforms/armv7/samsung/odroid-xu3}), on peut suivre un guide de génération de la carte SD qui contient le système d'exploitation. Ce guide est disponible à l'appendice \ref{install_alarm_odroid}.
+Sur la page wiki de la distribution (\url{https://archlinuxarm.org/platforms/armv7/samsung/odroid-xu3}), on peut suivre un guide de génération de la carte SD qui contient le système d'exploitation. Une copie de ce guide est disponible à l'appendice \ref{install_alarm_odroid}.
+
+
+\section{Installation de Docker}
+Une fois le système installé et démarré, il convient d'installer Docker depuis les dépôts de la distribution.
+
+Ceci peut être accompli avec les commandes suivantes :
+
+\begin{bashcode}
+pacman -Syyu
+reboot
+pacman -S docker
+systemctl enable docker
+systemctl start docker
+docker version
+\end{bashcode}
+
+Sortie:
+
+\begin{bashcode}
+Client:
+ Version:      1.10.3
+ API version:  1.22
+ Go version:   go1.6
+ Git commit:   20f81dd
+ Built:        Sat Mar 12 12:49:56 2016
+ OS/Arch:      linux/arm
+
+Server:
+ Version:      1.10.3
+ API version:  1.22
+ Go version:   go1.6
+ Git commit:   20f81dd
+ Built:        Sat Mar 12 12:49:56 2016
+ OS/Arch:      linux/arm
+ \end{bashcode}
+
 
 \chapter{Objectif 3 - TODO}
 
@@ -252,7 +290,7 @@ L'étude de la sécurité de Docker a donc été séparée avec les couches arbi
 
 \item \nameref{creation_utilisation_images_docker} : Bonnes pratiques et contraintes liées au monde de l'embarqué
 
-\item \nameref{utilisation_containers}
+\item \nameref{utilisation_containers} : options de lancement
 
 \end{itemize}
 
@@ -260,8 +298,7 @@ L'étude de la sécurité de Docker a donc été séparée avec les couches arbi
 
 
 \chapter{Configuration du système d'exploitation hôte}\label{config_systeme_os_hote}
-
-TODO TODO TODO TODO TODO TODO TODO TODO TODO 
+TODO 
 Dans ce chapitre, on présente diverses bonnes pratiques et configurations dans le but de sécuriser Docker et/ou le système l'hébergeant.
 
 Parmi ces techniques, on peut citer :
@@ -271,51 +308,60 @@ Parmi ces techniques, on peut citer :
 \item TODO
 \end{itemize}
 
-\section{Passage en revue du benchmark de sécurité : CIS Docker 1.11.0 Benchmark}
 
+\section{Passage en revue du benchmark de sécurité : CIS Docker 1.11.0 Benchmark}
 TODO décrire ce que c'est ce bench, énumerer les points testés et en explorer un certain nombre
 
-\subsection{Ne pas utiliser AUFS}
 
+\subsection{Ne pas utiliser AUFS}
 TODO
+
 
 \subsection{User namespace}
-
 TODO
+
 
 \subsection{Interdiction de la communication réseau entre containers}
-
 TODO
+
 
 \section{Séparation des données Docker dans une partition chiffrée}
-
 TODO
+
 
 \section{TODO}
-
 TODO
+
 
 \chapter{Création et utilisation des images Docker}\label{creation_utilisation_images_docker}
+TODO : ce chapitre montre comment et pourquoi créer et utiliser des images Docker qui soient sécurisées et adaptées au monde de l'embarqué (taille principalement). Utilisation des hash cryptographiques pour l'OS utilisé et les versions des logiciels installés. 
+Montrer un cas pratique avec une image commune basée sur alpine linux dire ce que ca apporte de travailler ainsi et pourquoi il faut le faire.
 
-TODO
 
 \chapter{Utilisation des containers}\label{utilisation_containers}
+TODO : parler de la philosophie des containers légers et éphémères, comment les exécuter de manière sûre et sécurisée, comment limiter le pouvoir des containers (conso ram, ddos, communication avec le monde extérieur ou entre containers, ...)
 
-TODO
 
 \chapter{Déroulement du projet}
+TODO
+
 
 \section{Planning initial}
-
 TODO
+
 
 \section{Planning final}
-
 TODO
 
-\chapter{Proposition d'améliorations vis à vis du travail précédent}
 
-TODO: passer en revue et critique positivement le travail de Bachelor précédent. Dire que ce n'est pas une critique négative mais apporter un avis supplémentaire et plus récent (Docker évoluant beaucoup)
+\chapter{Proposition d'améliorations vis à vis du travail précédent}
+TODO: Pas prioritaire, a voir si on a le temps ! passer en revue et critique positivement le travail de Bachelor précédent. Dire que ce n'est pas une critique négative mais apporter un avis supplémentaire et plus récent (Docker évoluant beaucoup)
+
+
+\chapter{Conclusion}
+TODO...
+
+
 % == Bibliography
 \nocite{*} % cite all
 \bibliographystyle{plain}
