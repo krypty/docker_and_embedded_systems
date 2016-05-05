@@ -59,18 +59,61 @@ Source: \url{https://github.com/tutumcloud/hello-world/blob/master/Dockerfile}
 
 Un Dockerfile est en quelque sorte la recette de cuisine qui permet de construire une image Docker.
 
-Une fois l'image construite, on peut exécuter l'application dans un container. Un container Docker est donc une instance de l'image fraîchement créée. Le schéma ci-dessous montre les relations entre un Dockerfile, une image et un container.
+Une fois l'image construite, on peut exécuter l'application dans un container. Un container Docker est donc une instance de l'image fraîchement créée. La figure \ref{docker-dockerfile-image-container} montre les relations entre un Dockerfile, une image et un container.
 
 \begin{figure}[hbtp]
 \centering
 \includegraphics[scale=0.7]{img/docker-dockerfile-image-container.png}
 \caption{Dockerfile, image et container}
+\label{docker-dockerfile-image-container}
 \end{figure}
 
 
 \section{Système de fichiers en couche}\label{pres-docker-systeme-fichiers-couches}
-TODO dire voir rapport Loic + ajouter en bibtex
-Docker 
+Chaque image Docker est composée d'une liste de couches (\textit{layers}) superposées en lecture seule. Chaque couche représente la différence du système de fichiers par rapport à la couche précédente. Sur la figure \ref{docker-image-layers}, on peut voir 4 couches (identifiables avec des ID) et leur taille respectives.
+
+\begin{figure}[hbtp]
+\centering
+\includegraphics[scale=0.8]{img/image-layers}
+\caption{Couches d'une image Docker}
+\label{docker-image-layers}
+\end{figure}
+
+A la création d'un container, une nouvelle couche fine est ajoutée. Cette couche, appelée "container layer" est accessible en écriture durant l'exécution du container. La figure \ref{docker-container-layers} le montre clairement.
+
+\begin{figure}[hbtp]
+\centering
+\includegraphics[scale=0.8]{img/container-layers}
+\caption{Couches d'un container Docker}
+\label{docker-container-layers}
+\end{figure}
+
+Un mot supplémentaire sur une nouvelle caractéristiques arrivée avec Docker 1.10 (mars 2016); avant cette version, Docker attribuait des UUID\footnote{UUID : \url{https://fr.wikipedia.org/wiki/Universal_Unique_Identifier}} générés aléatoirement pour identifier les couches d'une image. Désormais, ces UUID sont remplacés par des hash appelés \textit{secure content hash}.
+
+Les différences principales entre un UUID et un hash sont :
+\begin{itemize}
+\item Un UUID est généré aléatoirement, donc deux images exactement identiques auront un UUID différent alors qu'en utilisant un hash, le résultat sera identique
+\item Les UUID, même si la probabilité est rare\footnote{Probabilité de doublon : \url{https://en.wikipedia.org/wiki/Universally_unique_identifier\#Random_UUID_probability_of_duplicates}}, il est possible de générer deux fois le même UUID ce qui peut poser des problèmes lors de la construction des images
+\item Une image téléchargée chez une personne A aura un UUID différent que la même image téléchargée chez une personne B. Impossible de s'assurer de l'intégrité de l'image téléchargée en se basant sur l'UUID. En utilisant le hash, on s'assure du même résultat si l'image est identique
+\end{itemize}
+
+Par conséquent Docker avance les avantages suivants:
+\begin{itemize}
+\item Intégrité des images téléchargées et envoyées (sur Docker Hub par exemple)
+\item Évite les collisions lors de l'identification des images et des couches
+\item Permet de partager des couches identiques qui proviendraient de \textit{build} différents
+\end{itemize}
+
+Le dernier point est relativement intéressant. En effet, si deux images de base (Ubuntu et Debian) sont différentes mais qu'une couche supérieure est identique (par exemple l'ajout d'un même fichier texte) alors cette couche supérieure peut être partagée entre les deux images (puisqu'elle possède le même hash). Ceci peut potentiellement offrir un gain d'espace disque conséquent si plusieurs images partagent plusieurs couches identiques. Ceci n'aurait pas pu être possible avec les UUID car les deux couches auraient produit deux UUID différents. Un exemple est visible à la figure \ref{shared-layer-hash}
+
+\begin{figure}[hbtp]
+\centering
+\includegraphics[scale=0.7]{img/shared-layer-hash}
+\caption{Couche partagée entre deux images Docker}
+\label{shared-layer-hash}
+\end{figure}
+
+D'autres explications plus détaillées sur le système de fichiers en couches sont disponible au chapitre 5.4.1 ont fait l'objet d'un chapitre dans le rapport "\bassangPrjSemestre" de M. Loic Bassang.
 
 
 \section{Isolation}\label{pres-docker-isolation}
