@@ -19,7 +19,7 @@ Les sections qui suivent abordent un peu plus en profondeur certains points clé
 \section{Containers vs machines virtuelles}
 Suite à la lecture de la section précédente, il serait normal de se dire que ces containers partagent certaines caractéristiques avec les machines virtuelles.
 
-Voici les différences majeures qu'il existe entre les containers et les machines virtuelles.
+Voici les différences majeures qu'il existe entre les containers et les machines virtuelles\cite{what_is_docker}.
 
 \begin{figure}[hbtp]
 \centering
@@ -70,7 +70,7 @@ Une fois l'image construite, on peut exécuter l'application dans un container. 
 
 
 \section{Système de fichiers en couche}\label{pres-docker-systeme-fichiers-couches}
-Chaque image Docker est composée d'une liste de couches (\textit{layers}) superposées en lecture seule. Chaque couche représente la différence du système de fichiers par rapport à la couche précédente. Sur la figure \ref{docker-image-layers}, on peut voir 4 couches (identifiables avec des ID) et leur taille respectives.
+Chaque image Docker est composée d'une liste de couches (\textit{layers}) superposées en lecture seule\cite{understanding_image_container_driver_storage}. Chaque couche représente la différence du système de fichiers par rapport à la couche précédente. Sur la figure \ref{docker-image-layers}, on peut voir 4 couches (identifiables avec des ID) et leur taille respectives.
 
 \begin{figure}[hbtp]
 \centering
@@ -113,12 +113,30 @@ Le dernier point est relativement intéressant. En effet, si deux images de base
 \label{shared-layer-hash}
 \end{figure}
 
-D'autres explications plus détaillées sur le système de fichiers en couches sont disponible au chapitre 5.4.1 ont fait l'objet d'un chapitre dans le rapport "\bassangPrjSemestre" de M. Loic Bassang.
+D'autres explications plus détaillées sur le système de fichiers en couches sont disponibles au chapitre 5.4.1 ont fait l'objet d'un chapitre dans le rapport "\bassangPrjSemestre" de M. Loic Bassang.
 
 
 \section{Isolation}\label{pres-docker-isolation}
-TODO dire à quels niveaux Docker est isolé, parler des namespaces et des cgroups
+Docker met en avant le fait que ses containers soient isolés du système hôte. Pour ce faire, Docker utilise des mécanismes fournis par le kernel. On peut citer parmi ces mécanismes les \textit{namespaces} et \textit{cgroups}.
 
+\subsection{Les namespaces}
+Les namespaces permettent d'isoler certaines fonctionnalités d'un système d'exploitation utilisant Linux. Comme chroot permet aux processus de voir comme racine un dossier isolé du système et non pas la "vraie" racine, les namespaces isolent certains aspects du système comme les processus, les interfaces réseaux, les points de montage, etc.
+
+Jusqu'à très récemment (docker < 1.10.0), Docker supportait les namespaces suivants\cite{docker_1_10_user_namespace}:
+
+\begin{itemize}
+\item PID namespace, chaque conteneur a ses propres id de processus
+\item UTS namespace, pour avoir son propre hostname
+\item IPC namespace, qui permet d'isoler les Communications Inter-Processus
+\item Network namespace, chaque conteneur peux avoir sa propre interface réseau, son ip, ses règles de filtrage
+\end{itemize}
+
+Docker a désormais ajouté le support d'un nouveau namespace: user namespace. Celui-ci permet à un processus d'avoir les droits root au sein d'un namespace mais pas en dehors. Avant, Docker lançait les containers en root ce qui pouvait poser des problèmes de sécurité si un processus dans le container venait à en sortir; il se retrouverait root sur le système hôte. Avec la prise en charge de ce namespace, un container Docker a l'impression d'être root alors qu'il n'est, en réalité, qu'un utilisateur normal sur le système hôte.
+
+\subsection{cgroups - Control Groups}
+Cgroups (control groups) est une fonctionnalité du kernel pour limiter et isoler l'utilisation des ressources (CPU, RAM, utilisation disque, utilisation réseau,...). Pour limiter les ressources, cgroups propose de créer un groupe (profil) qui décrit les limitations à respecter. Par exemple, Si on crée un groupe appelé "groupe 1" et qu'on exige de lui qu'il n'utilise au maximum 25\% de la charge CPU et n'utilise au maximum 100 MB de RAM. Alors, il devient possible de lancer des programmes qui appartiennent à ce groupe et qui respectent les limites fixées.
+
+Lorsqu'on utilise la commande \code{docker run} de Docker pour lancer un container, Docker peut utiliser cgroups et ainsi limiter les ressources du container\footnote{Docker - Runtime constraints on resources: \url{https://docs.docker.com/engine/reference/run/\#runtime-constraints-on-resources}}.
 
 \section{Contraintes liées au monde de l'embarqué}
 TODO décrire les problématiques du monde embarqué, dire comment on peut en résoudre avec Docker et les pré-requis nécessaires pour utiliser Docker sur un système embarqué.
