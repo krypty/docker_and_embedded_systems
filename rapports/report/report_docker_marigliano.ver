@@ -7,4 +7,8 @@
  & 02.05.16
  & \listset {\theauthor }
  & Création du document\\
+0.0.2
+ & 05.05.16
+ & \listset {\theauthor }
+ & Ajout des chapitres Matériel utilisé, Présentation de Docker\\
 \end {longtable}

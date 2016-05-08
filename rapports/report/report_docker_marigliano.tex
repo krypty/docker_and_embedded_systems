@@ -76,6 +76,7 @@
 
 \title{Projet de semestre Docker and embedded systems}
 \author{Gary \bsc{Marigliano}}
+\newcommand{\version}{0.0.2}
 
 % aliases
 \newcommand{\odroid}{ODROID-XU3 Lite }
@@ -140,7 +141,8 @@
 \vfill
 
 % Bottom of the page
-{\large Version 0.0.1 \\ \today}
+{\large Version \version \\ \today}
+
 
 \end{center}
 \end{titlepage}
@@ -148,6 +150,7 @@
 \pagestyle{historystyle}
 \begin{versionhistory}  
   \vhEntry{0.0.1}{02.05.16}{\theauthor}{Création du document}
+  \vhEntry{0.0.2}{05.05.16}{\theauthor}{Ajout des chapitres Matériel utilisé, Présentation de Docker}
 \end{versionhistory}
 
 
@@ -169,7 +172,7 @@ Ce document est le rapport de fin de projet de semestre Docker and embedded syst
 
 Lien: \url{https://github.com/krypty/docker_and_embedded_systems}
 
-Ce projet de semestre s'inscrit dans une certaine continuité avec les projets de semestre et de bachelor de M. Loic Bassang \cite{TODO}. Plusieurs pistes intéressantes avaient en effet été mentionnées dans ces projets là notamment une partie concernant la sécurité et Docker. Ainsi, ce rapport fera parfois des parallèles avec ces documents.
+Ce projet de semestre s'inscrit dans une certaine continuité avec les projets de semestre et de bachelor de M. Loic Bassang \cite{bassang_bachelor}. Plusieurs pistes intéressantes avaient en effet été mentionnées dans ces projets là notamment une partie concernant la sécurité et Docker. Ainsi, ce rapport fera parfois des parallèles avec ces documents.
 
 Il est important de noter que la vitesse de développement de Docker est assez hallucinante. En effet, sur Github (\url{https://github.com/docker/docker}) les commits se succèdent à vitesse grand V. Entre chaque version de Docker, qui sortent environ tous les mois, il est courant d'avoir plus de 3000 commits qui ont été \emph{pushés}. Tout ceci pour dire qu'à la lecture de ce document, il est quasiment sûr que certaines pistes explorées soient définitivement obsolètes ou au contraire deviennent la voie à suivre du à une mise à jour quelconque.
 
@@ -205,7 +208,7 @@ Afin de réaliser ce projet, une carte embarquée \odroid a été mise à dispos
 
 \section{La carte \odroid}
 
-Cette carte possède les caractéristiques suivantes \cite{TODO}: 
+Cette carte possède les caractéristiques suivantes \cite{hardkernel_odroid_xu3}: 
 
 \begin{itemize}
 \item Samsung Exynos5422 Cortex™-A15 1.8Ghz quad core and Cortex™-A7 quad core CPUs 
@@ -228,7 +231,7 @@ Lien vers le constructeur : \url{http://www.hardkernel.com/main/products/prdt_in
 
 Initialement, il était prévu de générer un système d'exploitation minimal qui aurait été capable de faire tourner Docker et des containers. Malheureusement, il n'a pas été possible de cross compiler Docker \textit{et son daemon} afin de lancer des containers sur ce système minimal. Plus d'informations sont disponibles dans le rapport \oldreportname. 
 
-Ainsi, il a été décidé, de la même manière que pour le travail de bachelor précédent, d'utiliser une distribution GNU/Linux proposant Docker dans ses packages. Le choix s'est donc porté sur \textbf{Archlinux ARM} \cite{TODO}.
+Ainsi, il a été décidé, de la même manière que pour le travail de bachelor précédent, d'utiliser une distribution GNU/Linux proposant Docker dans ses packages. Le choix s'est donc porté sur \textbf{Archlinux ARM} \footnote{Arch Linux ARM : \url{https://archlinuxarm.org/}}.
 
 Sur la page wiki de la distribution (\url{https://archlinuxarm.org/platforms/armv7/samsung/odroid-xu3}), on peut suivre un guide de génération de la carte SD qui contient le système d'exploitation. Une copie de ce guide est disponible à l'appendice \ref{install_alarm_odroid}.
 
@@ -359,7 +362,7 @@ TODO: Pas prioritaire, a voir si on a le temps ! passer en revue et critique pos
 
 
 \chapter{Conclusion}
-TODO...
+TODO... ce qu'on voulait faire, ce qui a été fait, ce qu'il reste à faire/pourrait faire
 
 
 % == Bibliography

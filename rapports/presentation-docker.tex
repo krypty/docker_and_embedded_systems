@@ -2,10 +2,9 @@
 \newcommand{\bassangPrjBachelor}{Docker and Internet of Things (travail de Bachelor)}
 \section{Introduction}
 
-Le but de ce chapitre est d'apporter un contexte au projet réalisé afin de comprendre ce qui est expliqué dans la suite de ce document. Si le lecteur souhaite connaître les tréfonds de Docker, il est recommandé de lire le rapport "\bassangPrjSemestre" de M. Loic Bassang \cite{TODO}. 
+Le but de ce chapitre est d'apporter un contexte au projet réalisé afin de comprendre ce qui est expliqué dans la suite de ce document. Si le lecteur souhaite connaître les tréfonds de Docker, il est recommandé de lire le rapport "\bassangPrjSemestre" de M. Loic Bassang \cite{bassang_semestre}. 
 
-Docker est un outil qui permet de empaqueter une application et ses dépendances dans un container léger, auto-suffisant, isolé et portable. En intégrant leur application dans un container, les développeurs s'assurent que celle-ci va tourner sur n'importe quel environnement GNU/Linux. Ainsi, le temps passé à configurer les différents environnements (développement, test et production typiquement) est réduit voire même unifié.
-TODO: citer \url{https://en.wikipedia.org/wiki/Docker_%28software%29}, \url{https://www.linux.com/news/docker-shipping-container-linux-code}, \url{https://www.docker.com/what-docker}
+Docker est un outil qui permet de empaqueter une application et ses dépendances dans un container léger, auto-suffisant, isolé et portable. En intégrant leur application dans un container, les développeurs s'assurent que celle-ci va tourner sur n'importe quel environnement GNU/Linux. Ainsi, le temps passé à configurer les différents environnements (développement, test et production typiquement) est réduit voire même unifié\cite{shipping_container_linux_code}\cite{wikipedia_docker}\cite{what_is_docker}.
 
 Les caractéristiques principales des containers Docker sont les suivantes :
 \begin{itemize}
@@ -31,7 +30,7 @@ Les machines virtuelles possèdent leur propre OS qui embarque ses propres binai
 
 Les containers s'exécutent de manière isolée par dessus l'OS hôte qui partage ses ressources (kernel, binaires, librairies, périphériques,...). Plus légers, les containers démarrent en quelques secondes seulement. Sur une machine, il est tout à fait possible de lancer de milliers de containers similaires car l'empreinte mémoire est réduite et l'espace disque occupé est partagé si les containers sont semblables. Ceci est expliqué plus en détail à la section \ref{pres-docker-systeme-fichiers-couches}. Les containers sont isolés mais ils peuvent aussi communiquer entre eux si on leur a explicitement donner l'autorisation.
 
-Si le lecteur désire connaître plus de détails concernant la virtualisation, il est conseillé de lire le chapitre 3.2 du rapport "\bassangPrjSemestre" de M. Loic Bassang \cite{TODO} qui amène une bonne introduction aux différents types de virtualisation.
+Si le lecteur désire connaître plus de détails concernant la virtualisation, il est conseillé de lire le chapitre 3.2 du rapport "\bassangPrjSemestre" de M. Loic Bassang \cite{bassang_semestre} qui amène une bonne introduction aux différents types de virtualisation.
 
 
 \section{Docker images et Docker containers}
@@ -134,9 +133,32 @@ Jusqu'à très récemment (docker < 1.10.0), Docker supportait les namespaces su
 Docker a désormais ajouté le support d'un nouveau namespace: user namespace. Celui-ci permet à un processus d'avoir les droits root au sein d'un namespace mais pas en dehors. Avant, Docker lançait les containers en root ce qui pouvait poser des problèmes de sécurité si un processus dans le container venait à en sortir; il se retrouverait root sur le système hôte. Avec la prise en charge de ce namespace, un container Docker a l'impression d'être root alors qu'il n'est, en réalité, qu'un utilisateur normal sur le système hôte.
 
 \subsection{cgroups - Control Groups}
-Cgroups (control groups) est une fonctionnalité du kernel pour limiter et isoler l'utilisation des ressources (CPU, RAM, utilisation disque, utilisation réseau,...). Pour limiter les ressources, cgroups propose de créer un groupe (profil) qui décrit les limitations à respecter. Par exemple, Si on crée un groupe appelé "groupe 1" et qu'on exige de lui qu'il n'utilise au maximum 25\% de la charge CPU et n'utilise au maximum 100 MB de RAM. Alors, il devient possible de lancer des programmes qui appartiennent à ce groupe et qui respectent les limites fixées.
+Cgroups (control groups) est une fonctionnalité du kernel pour limiter, prioriser, isoler et contrôler l'utilisation des ressources (CPU, RAM, utilisation disque, utilisation réseau,...). Pour limiter les ressources, cgroups propose de créer un groupe (profil) qui décrit les limitations à respecter. Par exemple, Si on crée un groupe appelé "groupe 1" et qu'on exige de lui qu'il n'utilise au maximum 25\% de la charge CPU et n'utilise au maximum 100 MB de RAM. Alors, il devient possible de lancer des programmes qui appartiennent à ce groupe et qui respectent les limites fixées.
 
 Lorsqu'on utilise la commande \code{docker run} de Docker pour lancer un container, Docker peut utiliser cgroups et ainsi limiter les ressources du container\footnote{Docker - Runtime constraints on resources: \url{https://docs.docker.com/engine/reference/run/\#runtime-constraints-on-resources}}.
 
 \section{Contraintes liées au monde de l'embarqué}
-TODO décrire les problématiques du monde embarqué, dire comment on peut en résoudre avec Docker et les pré-requis nécessaires pour utiliser Docker sur un système embarqué.
+On entend par système embarqué, un système qui est/peut être léger, autonome, à puissance limitée, à stockage réduit, avec un OS minimal et souvent connecté.
+
+Dans le monde de l'embarqué, il existe plusieurs problèmes récurrents lorsqu'on développe, déploie et maintient une application sur une cible. On peut citer les problèmes suivants :
+
+\begin{itemize}
+\item Cross-compilation souvent obligatoire
+\item Aucune interface graphique
+\item Installation et configuration des dépendances sur la cible
+\item Mises à jour de l'application et de ses dépendances
+\item Tests et journalisation (logs)
+\item Limiter l'utilisation en CPU, RAM et disque
+\end{itemize}
+
+Bien que ces problèmes peuvent être aussi présents dans le cas d'un développement desktop, ils ne sont pas aussi préoccupants.
+
+Docker peut être utile dans le cadre d'une application embarquée car il permet une maintenance plus aisée de l'application car on peut \textbf{versionner son installation et sa configuration ainsi que celle de ses dépendances}. Ceci permet de plus facilement mettre à jour une application mais également de pouvoir revenir à une version précédente. De plus, si un accès réseau est disponible, il est même possible d'administrer Docker à distance depuis un poste de développement en se connectant au \textit{deamon} Docker de la cible.
+
+Cependant, il reste quelques freins et pré-requis pour pouvoir utiliser Docker sur une carte embarquée :
+
+\textbf{GNU/Linux : } Il faut un système GNU/Linux et si possible une distribution qui intègre Docker dans ses packages
+
+\textbf{Images compatibles : } Les images doivent être compatibles avec la plateforme de la cible. Les images x64 ne fonctionnent pas sur ARM. Actuellement, la majorité des images sont basées sur une image de base x64. Dans la plupart des cas, il suffit de trouver l'équivalent ARM de l'image de base. Par exemple, à la lecture d'un Dockerfile, il suffit de remplacer \code{FROM ubuntu} par \code{FROM armhf/ubuntu} pour que l'image arrive à se construire. Dans les autres cas, il faudra adapter les instructions du Dockerfile.
+
+\textbf{Espace disque limité : } Il faut veiller à l'utilisation de l'espace disque. En effet, la plupart des images se basent sur des Ubuntu (~400 MB) ou des Debian (~300 MB) ce qui peut être trop volumineux pour un système embarqué. De plus plusieurs versions de ces images peuvent être téléchargées si les Dockerfiles le spécifient. Par exemple, \code{FROM ubuntu:14.04} pour l'image 1 et \code{FROM ubuntu:15.10} pour l'image 2. On favorisera l'utilisation d'une image de base légère, comme Alpine Linux\footnote{Alpine Linux : \url{http://www.alpinelinux.org/}}, commune à plusieurs applications ou processus tournant sur la cible. 
