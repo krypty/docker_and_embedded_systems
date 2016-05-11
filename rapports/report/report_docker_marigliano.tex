@@ -15,6 +15,9 @@
 \usepackage{verbatim}
 \usepackage{float}
 \usepackage{enumerate}
+\usepackage{lmodern}
+\usepackage{pdflscape}
+\usepackage{subfig}
 
 % == Header and Footer
 \usepackage{fancyhdr}
@@ -76,7 +79,7 @@
 
 \title{Projet de semestre Docker and embedded systems}
 \author{Gary \bsc{Marigliano}}
-\newcommand{\version}{0.0.2}
+\newcommand{\version}{0.0.3}
 
 % aliases
 \newcommand{\odroid}{ODROID-XU3 Lite }
@@ -151,6 +154,7 @@
 \begin{versionhistory}  
   \vhEntry{0.0.1}{02.05.16}{\theauthor}{Création du document}
   \vhEntry{0.0.2}{05.05.16}{\theauthor}{Ajout des chapitres Matériel utilisé, Présentation de Docker}
+    \vhEntry{0.0.3}{11.05.16}{\theauthor}{Rédaction des sections Situation actuelle, Séparation des données Docker dans une partition chiffrée, Planning }
 \end{versionhistory}
 
 
@@ -271,19 +275,20 @@ Server:
  \end{bashcode}
 
 
-\chapter{Objectif 3 - TODO}
+\chapter{Objectif 3 - Docker et la sécurité}
 
 \section{Situation actuelle}
-TODO: rappeler les objectifs, en particulier l'objectif courant (le 3)...
+Pour cette partie du projet, l'objectif est le suivant : Analyser et évaluer l'aspect sécurité de Docker dans le cadre d'une utilisation avec une carte embarquée.
 
-TODO: dire qu'on part d'une distribution Archlinux ARM et qu'on utilise un Odroid XU3 car pas réussi à cross compiler Docker. Tout comme cela avait été fait pour le travail de Bachelor précédent.
+Pour rappel, on utilise la carte \odroid. Un des objectifs de ce projet était de générer un système GNU/Linux minimal contenant un binaire Docker cross-compilé. Malheureusement, cet objectif n'a pas abouti comme expliqué dans le rapport "\oldreportname".
 
+Pour continuer sur la partie sécurité, il a été choisi d'utiliser une distribution GNU/Linux compatible avec la carte et qui propose dans ces dépôts un package Docker précompilé. Tout comme le travail précédent de M. Loïc Bassang, Arch Linux ARM a été sélectionné.
 
 \section{Structure de la suite du document}
 
 Pour ce projet, il a été décidé d'étudier la question de la sécurité avec Docker avec une approche en couches. A peu à la manière du modèle OSI\footnote{Modèle OSI: \url{https://fr.wikipedia.org/wiki/Mod\%C3\%A8le_OSI}} en réseau, chaque couche représente un ensemble de fonctionnalités qui, dans le cas de ce projet, doit faire l'objet d'une évaluation de la sécurité.
 
-L'étude de la sécurité de Docker a donc été séparée avec les couches arbitraires suivantes:
+L'étude de la sécurité de Docker a donc été séparée avec les couches \textit{arbitraires} suivantes:
 
 \begin{itemize}
 
@@ -329,8 +334,199 @@ TODO
 
 
 \section{Séparation des données Docker dans une partition chiffrée}
-TODO
+Dans cette section, une partition chiffrée sera créée sur la cible afin d'isoler les données (images et containers principalement) de Docker du reste du système. La partition sera chiffrée afin d'accroître la sécurité des données.
 
+Les étapes suivantes seront réalisées :
+\begin{enumerate}
+\item Redimensionnement de la partition principale
+\item Création d'une partition chiffrée
+\item Montage manuel de la partition chiffrée
+\item Montage au boot de la partition chiffrée
+\item Preuve de bon fonctionnement du montage automatique
+\item Binding des données de Docker sur la partition chiffrée
+\item Analyse de la solution proposée
+\end{enumerate}
+
+\subsection{Redimensionnement de la partition principale}
+Actuellement, il n'y a qu'une partition sur la cible; la partition principale. Il faut réduire la partition principale et créer une partition dans le nouvel espace libre. Pour ce faire, l'outil GParted\footnote{GParted : \url{http://gparted.org/}} a été utilisé car il permet de voir visuellement ce qui est réalisé.
+
+
+
+\begin{figure}[H]
+    \subfloat[Situation initiale - Une seule partition]{%
+      \includegraphics[width=0.45\textwidth]{img/luks/gparted1.png}
+    }
+    \hfill
+    \subfloat[Redimensionnement de la partition principale]{%
+      \includegraphics[width=0.45\textwidth]{img/luks/gparted2.png}
+    }
+        
+    \subfloat[Création de la partition pour les données Docker]{%
+      \includegraphics[width=0.45\textwidth]{img/luks/gparted3.png}
+    }
+    \hfill
+    \subfloat[Confirmation]{%
+      \includegraphics[width=0.45\textwidth]{img/luks/gparted4.png}
+    }
+    
+     \subfloat[Partitionnement en cours...]{%
+      \includegraphics[width=0.45\textwidth]{img/luks/gparted5.png}
+    }
+    \hfill
+    \subfloat[Situation finale - Deux partitions, la principale et celle pour Docker]{%
+      \includegraphics[width=0.45\textwidth]{img/luks/gparted6.png}
+    }
+    \caption{Redimensionnement de la partition principale}
+\end{figure}
+
+\subsection{Création d'une partition chiffrée}
+
+Maintenant la carte SD correctement partitionnée, il faut créer la partition chiffrée avec LUKS. Pour ce faire, Gnome Disks Utility va être utilisé\footnote{Gnome Disk Utility : \url{https://doc.ubuntu-fr.org/gnome-disk-utility}}.
+
+\begin{figure}[H]
+    \subfloat[Sélection de la partition à chiffrer. Cliquer sur la roue crantée et sélectionner "Format Partition...".]{%
+      \includegraphics[width=0.45\textwidth]{img/luks/gnome-disks1.png}
+    }
+    \hfill
+    \subfloat[Sélectionner "Encrypted, compatible with Linux systems (LUKS + ext4)" et saisir une passphrase (mot de passe)]{%
+      \includegraphics[width=0.45\textwidth]{img/luks/gnome-disks2.png}
+    }
+        
+    \subfloat[La partition chiffrée est créée]{%
+      \includegraphics[width=0.45\textwidth]{img/luks/gnome-disks3.png}
+    }
+    \caption{Création de la partition chiffrée avec Gnome Disk Utility}
+\end{figure}
+
+
+\subsection{Montage manuel de la partition chiffrée}
+Maintenant que la partition chiffrée a été créée, on peut replacer la carte SD dans la cible et la démarrer.
+
+Pour monter manuellement la partition, il faut réaliser les commandes suivantes : 
+\begin{bashcode}
+sudo mkdir /mnt/docker-data
+sudo cryptsetup luksOpen /dev/mmcblk0p2 docker-data
+sudo mount /dev/mapper/docker-data /mnt/docker-data/
+\end{bashcode}
+
+\code{/dev/mmcblk0p2} représente la partition chiffrée de la carte SD.
+
+\subsection{Montage au boot de la partition chiffrée}
+Monter manuellement la partition n'est pas une solution possible si l'on souhaite y mettre les données de Docker dessus. En effet, pour que Docker stocke ces données (rappel: les images et les containers) dans la partition chiffrée, il faut monter cette partition au démarrage de la cible et créer un \textit{bind mount} sur \code{/var/lib/docker}. 
+
+
+Avant d'effectuer le \textit{bind mount}, on va déjà faire en sorte de monter la partition chiffrée au boot.
+
+
+Pour monter la partition chiffrée au démarrage du système, il faut ouvrir le fichier \code{/etc/crypttab} sur la cible, et ajouter la ligne suivante :
+\begin{bashcode}
+docker-data /dev/mmcblk0p2  none luks
+\end{bashcode}
+
+De manière similaire, il faut ajouter cette ligne dans le fichier \code{/etc/fstab} : 
+\begin{bashcode}
+/dev/mapper/docker-data /mnt/docker-data ext4 rw 0 0
+\end{bashcode}
+
+
+\subsection{Preuve de bon fonctionnement du montage automatique}
+Pour vérifier que tout ceci fonctionne bien, il suffit de redémarrer la cible et on devrait observer les lignes suivantes au boot :
+
+\begin{bashcode}
+[  OK  ] Found device /dev/mmcblk0p2.
+[    9.449751] [c5] INA231 3-0041: I2C write error: (-6) reg: 0x0
+[    9.454336] [c5] INA231 3-0041: ============= Probe INA231 Fail! : sensor_mem (0xFFFFFFFA) =============
+[    9.472839] [c5] INA231 3-0044: I2C write error: (-6) reg: 0x0
+[    9.477448] [c5] INA231 3-0044: ============= Probe INA231 Fail! : sensor_g3d (0xFFFFFFFA) =============
+[    9.495472] [c4] INA231 3-0045: I2C write error: (-6) reg: 0x0
+[    9.500009] [c4] INA231 3-0045: ============= Probe INA231 Fail! : sensor_kfc (0xFFFFFFFA) =============
+[    9.511555] [c4] s3c-i2c 12c60000.i2c: i2c-3: S3C I2C adapter
+[    9.516095] [c4] s3c-i2c 12c70000.i2c: slave address 0x00
+         Starting Cryptography Setup for docker-data...
+[    9.529339] [c5] s3c-i2c 12c70000.i2c: i2c-4: S3C I2C adapter
+[  OK  ] Reached target Sound Card.
+[    9.782604] [c5] smsc95xx v1.0.4
+[    9.838453] [c7] smsc95xx 1-1.1:1.0 eth0: register 'smsc95xx' at usb-12110000.usb-1.1, smsc95xx USB 2.0 Ethernet, 9
+[    9.849106] [c7] usbcore: registered new interface driver smsc95xx
+[    9.946259] [c6] usbcore: registered new interface driver rtl8192cu
+Please enter passphrase for disk docker-data on /mnt/docker-data! ******
+[***   ] (1 of 2) A start job is running for...for docker-data (13s / no limit)[   22.871246] [c5] NET: Registered pr8
+[**    ] (1 of 2) A start job is running for...for docker-data (13s / no limit)[   23.925487] [c6] bio: create slab <1
+[  OK  ] Found device /dev/mapper/docker-data.
+[  OK  ] Started Cryptography Setup for docker-data.
+[  OK  ] Reached target Encrypted Volumes.
+         Mounting /mnt/docker-data...
+[   24.117386] [c5] EXT4-fs (dm-0): mounted filesystem with ordered data mode. Opts: (null)
+[  OK  ] Mounted /mnt/docker-data.
+\end{bashcode}
+
+Le système va se bloquer pour que la saisie de la passphrase soit effectuée :
+\begin{bashcode}
+Please enter passphrase for disk docker-data on /mnt/docker-data! ******
+\end{bashcode}
+
+Une fois connecté, il est tout à fait possible de d'écrire des données sur la partition chiffrée :
+\begin{bashcode}
+echo "LUKS je suis ton père !" > /mnt/docker-data/starwars.txt
+\end{bashcode}
+
+
+\subsection{Binding des données de Docker sur la partition chiffrée}
+Maintenant, on veut faire en sorte que les données de Docker soient dans cette partition chiffrée. Pour ce faire, on va effectuer un \textit{bind mount} entre un dossier dans la partition chiffrée et le dossier de Docker.
+
+Un bind mount n'est rien d'autre qu'un montage de dossier dans un autre dossier. On va donc monter \code{/mnt/docker-data/docker} dans \code{/var/lib/docker}. De cette manière, aucune configuration supplémentaire de Docker n'est nécessaire et ceci est donc complètement transparent pour lui. Cette opération est persistante après un redémarrage.
+
+\textbf{Attention : } Les opérations suivantes impliquent la perte de toutes les images et containers précédemment créés.
+
+Création du dossier \code{docker} sur la partition chiffrée, à faire sur la cible :
+\begin{bashcode}
+sudo systemctl stop docker # on stoppe le service Docker avant tout
+cd /mnt/docker-data
+mkdir -p var/lib/docker
+sudo rm -rf /var/lib/docker/ # supprime toutes les données de Docker !!!
+sudo mkdir /var/lib/docker
+\end{bashcode}
+
+Sur la cible, on fait ensuite un bind mount entre la partition chiffrée et le dossier Docker de base
+
+\begin{bashcode}
+sudo vim /etc/fstab
+
+# dans ce fichier, on ajoute la ligne suivante
+/mnt/docker-data/var/lib/docker /var/lib/docker none bind 0 0
+\end{bashcode}
+
+A la suite de ces modifications, le fichier /etc/fstab ressemble à ceci:
+\begin{bashcode}
+#
+# /etc/fstab: static file system information
+#
+# <file system> <dir>   <type>  <options>       <dump>  <pass>
+/dev/mapper/docker-data /mnt/docker-data ext4 rw 0 0
+/mnt/docker-data/var/lib/docker /var/lib/docker none bind 0 0
+\end{bashcode}
+
+
+Désormais les données de Docker sont stockées sur une partition séparée et chiffrée. Pour prouver que c'est bien le cas, il suffit de relancer le benchmark de sécurité:
+
+\begin{bashcode}
+cd /home/alarm/docker/docker-bench-security
+sudo bash docker-bench-security.sh
+
+# la sortie indique:
+[PASS] 1.1  - Create a separate partition for containers
+\end{bashcode}
+
+
+\subsection{Analyse de la solution proposée}
+Stocker les données de Docker dans une partition chiffrée est une bonne initiative mais il faut garder à l'esprit les implications suivantes :
+\begin{itemize}
+
+\item La partition chiffrée est montée au boot. Ceci implique quand cas de reboot de la machine, il faut avoir un accès physique à celle-ci car le service ssh n'est pas encore lancé à ce moment là. En cas de dépannage à distance, il n'est pas donc possible de reboot la cible.
+\item Les performances quand on utilise Docker devraient être diminuées dû au chiffrement
+\item L'utilisation d'une partition séparée permet de réinstaller le système sans perdre les données liées à Docker et ses containers.
+\item Le chiffrement des containers Docker apporte une plus value en terme de sécurité
+\end{itemize}
 
 \section{TODO}
 TODO
@@ -344,19 +540,26 @@ Montrer un cas pratique avec une image commune basée sur alpine linux dire ce q
 \chapter{Utilisation des containers}\label{utilisation_containers}
 TODO : parler de la philosophie des containers légers et éphémères, comment les exécuter de manière sûre et sécurisée, comment limiter le pouvoir des containers (conso ram, ddos, communication avec le monde extérieur ou entre containers, ...)
 
-
+\begin{landscape}
 \chapter{Déroulement du projet}
-TODO
 
 
 \section{Planning initial}
-TODO
+\begin{figure}[ht]
+\centering
+\includegraphics[height=4.7cm]{img/initial_planning.png}
+\caption{Planning initial - 04.03.2016}
+\end{figure}
 
 
 \section{Planning final}
-TODO
+\begin{figure}[ht]
+\centering
+\includegraphics[draft,height=4.7cm]{img/initial_planning.png}
+\caption{Planning final - TODO date}
+\end{figure}
 
-
+\end{landscape}
 \chapter{Proposition d'améliorations vis à vis du travail précédent}
 TODO: Pas prioritaire, a voir si on a le temps ! passer en revue et critique positivement le travail de Bachelor précédent. Dire que ce n'est pas une critique négative mais apporter un avis supplémentaire et plus récent (Docker évoluant beaucoup)
 

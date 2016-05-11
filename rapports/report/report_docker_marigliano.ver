@@ -11,4 +11,8 @@
  & 05.05.16
  & \listset {\theauthor }
  & Ajout des chapitres Matériel utilisé, Présentation de Docker\\
+0.0.3
+ & 11.05.16
+ & \listset {\theauthor }
+ & Rédaction des sections Situation actuelle, Séparation des données Docker dans une partition chiffrée, Planning \\
 \end {longtable}
