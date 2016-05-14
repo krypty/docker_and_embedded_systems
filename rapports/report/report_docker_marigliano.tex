@@ -306,34 +306,139 @@ L'étude de la sécurité de Docker a donc été séparée avec les couches \tex
 
 
 \chapter{Configuration du système d'exploitation hôte}\label{config_systeme_os_hote}
-TODO 
 Dans ce chapitre, on présente diverses bonnes pratiques et configurations dans le but de sécuriser Docker et/ou le système l'hébergeant.
 
 Parmi ces techniques, on peut citer :
 
 \begin{itemize}
-\item TODO
-\item TODO
+\item Création d'une partition chiffrée pour stocker les données de Docker (containers et images)
+\item Modification des options de lancement du \textit{deamon} Docker
 \end{itemize}
 
 
 \section{Passage en revue du benchmark de sécurité : CIS Docker 1.11.0 Benchmark}
-TODO décrire ce que c'est ce bench, énumerer les points testés et en explorer un certain nombre
+Il s'agit d'un document à l'intention d'administrateurs systèmes ou spécialistes de la sécurités qui souhaitent intégrer, développer ou sécuriser des solutions qui utilisent Docker. 
+
+Le but de ce document est de proposer un éventail de recommandations concernant la sécurité de Docker sur plusieurs points. Voici les points évalués :
+\begin{enumerate}
+\item \textit{Host Configuration} : Recommandations pour la configuration de la machine hôte
+\item \textit{Docker daemon configuration} : Recommandations concernant le comportement du \textit{deamon} Docker
+\item \textit{Docker daemon configuration files} : Recommandations concernant la permission des fichiers et dossiers de configuration du \textit{daemon} Docker
+\item \textit{Container Images and Build File} : Recommandations concernant les images de base et les fichiers de build
+\item \textit{Container runtime} : Recommandations sur les options de lancement des containers
+\item \textit{Docker Security Operations} : Rappels des bonnes pratiques concernant la sécurité de Docker
+\end{enumerate}
+
+Lien : \url{https://benchmarks.cisecurity.org/tools2/docker/CIS_Docker_1.11.0_Benchmark_v1.0.0.pdf}
+
+Dans cette partie du rapport, quelques points de ce benchmark seront analysés et appliqués à la cible dans des conditions les plus réelles possibles.
+
+\subsection{Situation actuelle}
+Avant de chercher à sécuriser la cible, il faut connaître son état de sécurisation actuel. Pour ce faire, il suffit de lancer le script du benchmark qui va exécuter toutes les recommandations proposées et indiquer quels points sont à corriger.
+
+Avant de commencer, il faut lancer un container en arrière plan afin de pouvoir évaluer la partie \textit{5 - Container runtime} qui évalue les containers actuellement exécutés. Pour ce faire, on choisit de lancer en tâche de fond un serveur web sur la cible.
+
+A faire sur la cible :
+\begin{bashcode}
+docker run --name=my_container -d -p 8080:80 hypriot/rpi-busybox-httpd
+\end{bashcode}
+
+Lancement du benchmark :
+\begin{bashcode}
+git clone https://github.com/docker/docker-bench-security.git
+cd docker-bench-security/
+sudo sh docker-bench-security.sh
+\end{bashcode}
+
+On obtient la sortie suivante :
+
+\inputminted[xleftmargin=20pt, linenos=true, breaklines=true, frame=single, framesep=6pt, tabsize=2, fontfamily=courier, fontsize=\small]{text}{../../docker_security_benchmark/vanilla.log}
 
 
-\subsection{Ne pas utiliser AUFS}
+Comme on peut le voir, il y a plusieurs points qui sont en \textit{WARN}. Pour la suite du document, plusieurs de ces points vont être analysés et mitigés.
+
+
+\subsection{1.1  - Create a separate partition for containers}
+On recommande pour ce point de créer une partition séparée pour les containers. Ce point est traité à la section \ref{partition_chiffree}. Dans cette section, une étape supplémentaire est proposée; la partition est chiffrée.
+
+
+\subsection{2.1  - Restrict network traffic between containers}
+Par défaut, le trafic réseau est autorisé entre containers du même hôte. On devrait désactiver ce comportement par défaut et explicitement autoriser une communication entre containers grâce au "linking".
+
+Pour remédier à ceci, il faut lancer le \textit{daemon} Docker avec cette option: \code{docker daemon --icc=false}
+
+A faire sur la cible:
+
+\begin{bashcode}
+sudo vim /usr/lib/systemd/system/docker.service
+\end{bashcode}
+
+Ajouter l'option icc=false à l'instruction ExecStart. Le résultat devrait ressembler à ceci:
+
+\begin{bashcode}
+ExecStart=/usr/bin/docker daemon -H fd:// --icc=false
+\end{bashcode}
+
+Redémarrage du daemon:
+
+\begin{bashcode}
+sudo systemctl daemon-reload # recharge la configuration des services
+sudo systemctl restart docker # relance le service docker
+\end{bashcode}
+
+Résultat du benchmark après cette modification: \code{[PASS] 2.1 - Restrict network traffic between containers}.
+
+\subsection{2.5 - Do not use the aufs storage driver}
 TODO
 
 
-\subsection{User namespace}
+\subsection{2.8 - Enable user namespace support}
 TODO
 
 
-\subsection{Interdiction de la communication réseau entre containers}
+\subsection{2.11 - Use authorization plugin}
 TODO
 
 
-\section{Séparation des données Docker dans une partition chiffrée}
+\subsection{2.12 - Configure centralized and remote logging}
+TODO
+
+
+\subsection{2.13 - Disable operations on legacy registry (v1)}
+TODO
+
+
+\subsection{4.1  - Create a user for the container}
+TODO
+
+
+\subsection{4.5  - Enable Content trust for Docker}
+TODO
+
+\subsection{5.3  - Restrict Linux Kernel Capabilities within containers}
+TODO
+
+\subsection{5.4  - Do not use privileged containers}
+TODO explain only
+
+\subsection{5.6  - Do not run ssh within containers}
+TODO explain only
+
+\subsection{5.10 - Limit memory usage for container}
+TODO
+
+\subsection{5.11 - Set container CPU priority appropriately}
+TODO
+
+\subsection{5.12 - Mount container's root filesystem as read only}
+TODO explain only
+
+
+\subsection{Situation finale}
+TODO
+
+
+\section{Séparation des données Docker dans une partition chiffrée}\label{partition_chiffree}
 Dans cette section, une partition chiffrée sera créée sur la cible afin d'isoler les données (images et containers principalement) de Docker du reste du système. La partition sera chiffrée afin d'accroître la sécurité des données.
 
 Les étapes suivantes seront réalisées :
@@ -528,8 +633,8 @@ Stocker les données de Docker dans une partition chiffrée est une bonne initia
 \item Le chiffrement des containers Docker apporte une plus value en terme de sécurité
 \end{itemize}
 
-\section{TODO}
-TODO
+\section{Conclusion sur la configuration du système d'exploitation hôte}
+TODO dire ce qui s'est passé et ce qui serait bien de faire en plus.
 
 
 \chapter{Création et utilisation des images Docker}\label{creation_utilisation_images_docker}
