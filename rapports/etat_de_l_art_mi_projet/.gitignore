@@ -36,6 +36,8 @@
 *.vrb
 *.xdy
 *.tdo
+*.ver
+*.hst
 
 _minted*
 
