@@ -121,7 +121,7 @@
 \begin{minipage}{0.4\textwidth}
   \begin{flushright} \large
     \emph{Encadrant :} \\
-    Jean-Roland \bsc{Schüler}
+    Jean-Roland \bsc{Schuler}
   \end{flushright}
 \end{minipage}
 
@@ -176,7 +176,7 @@ Ce document est le rapport de fin de projet de semestre Docker and embedded syst
 
 Lien: \url{https://github.com/krypty/docker_and_embedded_systems}
 
-Ce projet de semestre s'inscrit dans une certaine continuité avec les projets de semestre et de bachelor de M. Loic Bassang \cite{bassang_bachelor}. Plusieurs pistes intéressantes avaient en effet été mentionnées dans ces projets là notamment une partie concernant la sécurité et Docker. Ainsi, ce rapport fera parfois des parallèles avec ces documents.
+Ce projet de semestre s'inscrit dans une certaine continuité avec les projets de semestre et de bachelor de M. Loic Bassang \cite{bassang_bachelor}. Plusieurs pistes intéressantes avaient en effet été mentionnées dans ces projets-là notamment une partie concernant la sécurité et Docker. Ainsi, ce rapport fera parfois des parallèles avec ces documents.
 
 Il est important de noter que la vitesse de développement de Docker est assez hallucinante. En effet, sur Github (\url{https://github.com/docker/docker}) les commits se succèdent à vitesse grand V. Entre chaque version de Docker, qui sortent environ tous les mois, il est courant d'avoir plus de 3000 commits qui ont été \emph{pushés}. Tout ceci pour dire qu'à la lecture de ce document, il est quasiment sûr que certaines pistes explorées soient définitivement obsolètes ou au contraire deviennent la voie à suivre du à une mise à jour quelconque.
 
@@ -193,7 +193,7 @@ De manière plus précise, ce projet vise à maitriser les parties suivantes:
   \item Comprendre, analyser et évaluer l'aspect sécurité de Docker dans le cadre d'une utilisation avec une carte embarquée
 \end{enumerate}
 
-Les deux premiers points ont été traités dans un précédent rapport appelé "\oldreportname".
+Les deux premiers points ont été traités dans un précédent rapport appelé "\oldreportname" qu'il est recommandé de lire.
 
 Ce document se concentre, dès lors, sur le dernier point ainsi que sur le déroulement global du projet.
 
@@ -233,7 +233,7 @@ Lien vers le constructeur : \url{http://www.hardkernel.com/main/products/prdt_in
 
 \section{Installation du système}
 
-Initialement, il était prévu de générer un système d'exploitation minimal qui aurait été capable de faire tourner Docker et des containers. Malheureusement, il n'a pas été possible de cross compiler Docker \textit{et son daemon} afin de lancer des containers sur ce système minimal. Plus d'informations sont disponibles dans le rapport \oldreportname. 
+Initialement, il était prévu de générer un système d'exploitation minimal qui aurait été capable de faire tourner Docker et des containers. Malheureusement, il n'a pas été possible de cross compiler Docker \textit{et son daemon} afin de lancer des containers sur ce système minimal. Plus d'informations sont disponibles dans le rapport "\oldreportname". 
 
 Ainsi, il a été décidé, de la même manière que pour le travail de bachelor précédent, d'utiliser une distribution GNU/Linux proposant Docker dans ses packages. Le choix s'est donc porté sur \textbf{Archlinux ARM} \footnote{Arch Linux ARM : \url{https://archlinuxarm.org/}}.
 
@@ -389,11 +389,79 @@ sudo systemctl restart docker # relance le service docker
 Résultat du benchmark après cette modification: \code{[PASS] 2.1 - Restrict network traffic between containers}.
 
 \subsection{2.5 - Do not use the aufs storage driver}
-TODO
+Pour stocker les images et les différentes couches qui les composent, Docker utilise un driver de stockage\cite{understanding_image_container_driver_storage}, \cite{docker_select_a_driver}, \cite{jpetazzoni_device_driver}. Un driver de stockage (\textit{driver storage}) est l'implémentation d'une abstraction de services liés à la gestion des couches des images et de la couche inscriptible (\textit{writable}) des containers. L'utilisation d'un driver ou d'un autre est transparent pour l'utilisateur. Cependant, une certaine implémentation, aufs, est considérée peu stable et peut causer des crashes au niveau du kernel, voir \cite{cis_benchmark} page 45. Ce driver est donc à remplacer par un autre driver de stockage comme devicemapper par exemple.
+
+Inconvénient: aufs est le seul driver de stockage qui permet aux containers de partager la mémoire des librairies partagées. Cela peut être utile si la cible fait tourner des milliers de containers utilisant les mêmes programmes ou librairies \cite{cis_benchmark}.
+
+Dans le cadre d'une carte embarquée, on ne va pas faire tourner des milliers de containers en même temps et par conséquent changer de driver storage n'est pas un problème.
+
+Par défaut Docker utilise devicemapper mais suivant la distribution ou la plateforme utilisée, un autre storage driver est utilisé. Dans le cas présent, aufs est malheureusement utilisé.
+
+Vérification que device-mapper est présent sur le système:
+
+\begin{bashcode}
+[alarm@alarm docker-bench-security]# pacman -Qi device-mapper
+Name            : device-mapper
+Version         : 2.02.149-1
+Description     : Device mapper userspace library and tools
+Architecture    : armv7h
+URL             : http://sourceware.org/dm/
+Licenses        : GPL2  LGPL2.1
+Groups          : base
+Provides        : None
+Depends On      : glibc  systemd
+Optional Deps   : None
+Required By     : cryptsetup  docker  lvm2
+Optional For    : None
+Conflicts With  : None
+Replaces        : None
+Installed Size  : 871.00 KiB
+Packager        : Arch Linux ARM Build System <builder+xu2@archlinuxarm.org>
+Build Date      : Sun Apr 17 12:52:54 2016
+Install Date    : Mon Apr 18 14:12:44 2016
+Install Reason  : Explicitly installed
+Install Script  : No
+Validated By    : SHA-256 Sum
+\end{bashcode}
+
+Comme avant, on change les paramètres de lancement du \textit{daemon} Docker:
+
+\begin{bashcode}
+sudo vim /usr/lib/systemd/system/docker.service
+\end{bashcode}
+
+Ajouter l'option \code{--storage-driver=devicemapper} à l'instruction ExecStart. Le résultat devrait ressembler à ceci:
+
+\begin{bashcode}
+ExecStart=/usr/bin/docker daemon -H fd:// --icc=false --storage-driver=devicemapper
+\end{bashcode}
+
+\begin{bashcode}
+sudo systemctl daemon-reload # recharge la configuration des services
+sudo systemctl restart docker # relance le service docker
+\end{bashcode}
 
 
 \subsection{2.8 - Enable user namespace support}
-TODO
+Les namespaces permettent d'isoler certaines fonctionnalités d'un système d'exploitation utilisant Linux. Comme chroot permet aux processus de voir comme racine un dossier isolé du système et non pas la "vraie" racine, les namespaces isolent certains aspects du système comme les processus, les interfaces réseaux, les points de montage, etc.
+
+Jusqu'à très récemment (docker < 1.10.0), Docker supportait les namespaces suivants:
+\begin{itemize}
+\item PID namespace, chaque conteneur a ses propres id de processus
+\item UTS namespace, pour avoir son propre hostname
+\item IPC namespace, qui permet d'isoler les Communications Inter-Processus
+\item Network namespace, chaque conteneur peux avoir sa propre interface réseau, son ip, ses règles de filtrage
+\end{itemize}
+
+Pour plus de détails, voir section \ref{pres-docker-isolation}.
+
+Il y a peu de temps, Docker ajouté le support d'un nouveau namespace\cite{docker_1_10_user_namespace}: user namespace. Celui-ci permet à un processus d'avoir les droits root au sein d'un namespace mais pas en dehors. Avant, Docker lançait les containers en root ce qui pouvait poser des problèmes de sécurité si un processus dans le container venait à en sortir; il se retrouverait root sur le système hôte. Avec la prise en charge de ce namespace, un container Docker a l'impression d'être root alors qu'il n'est, en réalité, qu'un utilisateur normal sur le système hôte.
+
+Pour mettre en place ce mécanisme, il faut réaliser les opérations suivantes :
+
+\begin{bashcode}
+touch /etc/subuid /etc/subgid 
+\end{bashcode}
 
 
 \subsection{2.11 - Use authorization plugin}
@@ -486,7 +554,7 @@ Actuellement, il n'y a qu'une partition sur la cible; la partition principale. I
 
 \subsection{Création d'une partition chiffrée}
 
-Maintenant la carte SD correctement partitionnée, il faut créer la partition chiffrée avec LUKS. Pour ce faire, Gnome Disks Utility va être utilisé\footnote{Gnome Disk Utility : \url{https://doc.ubuntu-fr.org/gnome-disk-utility}}.
+Maintenant que la carte SD correctement partitionnée, il faut créer la partition chiffrée avec LUKS. Pour ce faire, Gnome Disks Utility est utilisé\footnote{Gnome Disk Utility : \url{https://doc.ubuntu-fr.org/gnome-disk-utility}}.
 
 \begin{figure}[H]
     \subfloat[Sélection de la partition à chiffrer. Cliquer sur la roue crantée et sélectionner "Format Partition...".]{%
@@ -520,7 +588,7 @@ sudo mount /dev/mapper/docker-data /mnt/docker-data/
 Monter manuellement la partition n'est pas une solution possible si l'on souhaite y mettre les données de Docker dessus. En effet, pour que Docker stocke ces données (rappel: les images et les containers) dans la partition chiffrée, il faut monter cette partition au démarrage de la cible et créer un \textit{bind mount} sur \code{/var/lib/docker}. 
 
 
-Avant d'effectuer le \textit{bind mount}, on va déjà faire en sorte de monter la partition chiffrée au boot.
+Avant d'effectuer le \textit{bind mount}, il faut faire en sorte de monter la partition chiffrée au boot.
 
 
 Pour monter la partition chiffrée au démarrage du système, il faut ouvrir le fichier \code{/etc/crypttab} sur la cible, et ajouter la ligne suivante :
@@ -539,21 +607,7 @@ Pour vérifier que tout ceci fonctionne bien, il suffit de redémarrer la cible 
 
 \begin{bashcode}
 [  OK  ] Found device /dev/mmcblk0p2.
-[    9.449751] [c5] INA231 3-0041: I2C write error: (-6) reg: 0x0
-[    9.454336] [c5] INA231 3-0041: ============= Probe INA231 Fail! : sensor_mem (0xFFFFFFFA) =============
-[    9.472839] [c5] INA231 3-0044: I2C write error: (-6) reg: 0x0
-[    9.477448] [c5] INA231 3-0044: ============= Probe INA231 Fail! : sensor_g3d (0xFFFFFFFA) =============
-[    9.495472] [c4] INA231 3-0045: I2C write error: (-6) reg: 0x0
-[    9.500009] [c4] INA231 3-0045: ============= Probe INA231 Fail! : sensor_kfc (0xFFFFFFFA) =============
-[    9.511555] [c4] s3c-i2c 12c60000.i2c: i2c-3: S3C I2C adapter
-[    9.516095] [c4] s3c-i2c 12c70000.i2c: slave address 0x00
          Starting Cryptography Setup for docker-data...
-[    9.529339] [c5] s3c-i2c 12c70000.i2c: i2c-4: S3C I2C adapter
-[  OK  ] Reached target Sound Card.
-[    9.782604] [c5] smsc95xx v1.0.4
-[    9.838453] [c7] smsc95xx 1-1.1:1.0 eth0: register 'smsc95xx' at usb-12110000.usb-1.1, smsc95xx USB 2.0 Ethernet, 9
-[    9.849106] [c7] usbcore: registered new interface driver smsc95xx
-[    9.946259] [c6] usbcore: registered new interface driver rtl8192cu
 Please enter passphrase for disk docker-data on /mnt/docker-data! ******
 [***   ] (1 of 2) A start job is running for...for docker-data (13s / no limit)[   22.871246] [c5] NET: Registered pr8
 [**    ] (1 of 2) A start job is running for...for docker-data (13s / no limit)[   23.925487] [c6] bio: create slab <1
@@ -579,7 +633,7 @@ echo "LUKS je suis ton père !" > /mnt/docker-data/starwars.txt
 \subsection{Binding des données de Docker sur la partition chiffrée}
 Maintenant, on veut faire en sorte que les données de Docker soient dans cette partition chiffrée. Pour ce faire, on va effectuer un \textit{bind mount} entre un dossier dans la partition chiffrée et le dossier de Docker.
 
-Un bind mount n'est rien d'autre qu'un montage de dossier dans un autre dossier. On va donc monter \code{/mnt/docker-data/docker} dans \code{/var/lib/docker}. De cette manière, aucune configuration supplémentaire de Docker n'est nécessaire et ceci est donc complètement transparent pour lui. Cette opération est persistante après un redémarrage.
+Un bind mount n'est rien d'autre qu'un montage de dossier dans un autre dossier. On va donc monter \code{/mnt/docker-data/docker} dans \code{/var/lib/docker}. De cette manière, aucune configuration supplémentaire de Docker n'est nécessaire et ceci est donc complètement transparent pour lui. Cette opération est persistante après un redémarrage. Les \textit{bind mount} sont également utilisés comme redirection pour ne pas avoir de points de montage introuvables s'ils ont été déplacés.
 
 \textbf{Attention : } Les opérations suivantes impliquent la perte de toutes les images et containers précédemment créés.
 
