@@ -61,7 +61,9 @@
 % metadata
 \title{État de l'art à la mi-projet de semestre Docker and embedded systems - Ou comment ne pas cross compiler Docker sur ARM}
 \author{Gary \bsc{Marigliano}}
-\newcommand{\school}{Haute École d'ingénierie et d'architecture de Fribourg}
+\newcommand{\school}{Haute École d'ingénierie et d'architecture de Fribourg }
+\newcommand{\version}{0.0.3}
+\newcommand{\odroid}{ODROID-XU3 Lite }
 
 \begin{document}
 
@@ -100,7 +102,7 @@
 \begin{minipage}{0.4\textwidth}
   \begin{flushright} \large
     \emph{Encadrant :} \\
-    Jean-Roland \bsc{Schüler}
+    Jean-Roland \bsc{Schuler}
   \end{flushright}
 \end{minipage}
 
@@ -123,7 +125,7 @@
 \vfill
 
 % Bottom of the page
-{\large Version 0.0.2 \\ \today}
+{\large Version \version \\ \today}
 
 \end{center}
 \end{titlepage}
@@ -132,6 +134,7 @@
 \begin{versionhistory}  
   \vhEntry{0.0.1}{15.04.16}{\theauthor}{Création du document}
   \vhEntry{0.0.2}{01.05.16}{\theauthor}{Modifications première page, ajout historique, repositionnement des images}
+  \vhEntry{0.0.3}{21.05.16}{\theauthor}{Amélioration de la lisibilité générale}
 \end{versionhistory}
 
 
@@ -151,10 +154,12 @@ Lien: \url{https://github.com/krypty/docker_and_embedded_systems}
 
 Il est important de noter que la vitesse de développement de Docker est assez hallucinante. En effet, sur Github (\url{https://github.com/docker/docker}) les commits se succèdent à vitesse grand V. Entre chaque version de Docker qui sortent environ tous les mois, il est courant d'avoir plus de 3000 commits qui ont été \emph{pushés}. Tout ceci pour dire qu'à la lecture de ce document, il est quasiment sûr que certaines pistes explorées soient définitivement obsolètes ou au contraire deviennent la voie à suivre du à une mise à jour quelconque.
 
+Le chapitre \ref{pres-docker} présente Docker afin de pouvoir comprendre les chapitres suivants.
+
 
 \section{Objectifs}
 
-De manière plus précise, ce projet vise à maitriser les parties suivantes:
+De manière plus précise, ce projet vise à maîtriser les parties suivantes:
 
 \begin{enumerate}
   \item Construction d'un système Linux capable de faire tourner Docker et son \emph{daemon} en utilisant Buildroot. Pour générer le dit système, on dispose d'un \emph{repository} Gitlab hébergé à la \school
@@ -164,16 +169,16 @@ De manière plus précise, ce projet vise à maitriser les parties suivantes:
 
 L'objectif de ce document est d'énumérer les différentes techniques tentées pour (cross-)compiler Docker sur une cible ARM. De cette manière, le lecteur, en cas de reprise du projet ou par simple curiosité, aura une idée des pistes à explorer ou à éviter.
 
-\chapter{Présentation de Docker}
+\chapter{Présentation de Docker}\label{pres-docker}
 \input{../presentation-docker}
 
 \chapter{Objectif 1 - Construction d'un système GNU/Linux Docker-ready}
 
-Dans cette partie, on verra les ingrédients et pistes à suivre pour concevoir un système construit à partir de Buildroot capable de faire tourner Docker et son \emph{daemon}.
+Pour rappel, on souhaite générer un système minimal contenant Docker installable sur la cible, un \odroid. On verra donc les ingrédients et pistes à suivre pour concevoir un système construit à partir de Buildroot capable de faire tourner Docker et son \emph{daemon}.
 
 \section{Générer le système}
 
-Comme évoqué à la section \ref{contexte}, on dispose d'un Odroid XU3 sur lequel il faut générer un système GNU/Linux. Dans le cadre d'un cours, la \school met à disposition un \emph{repository} git qui contient tout ce qu'il faut pour gérérer un tel système.
+Comme évoqué à la section \ref{contexte}, on dispose d'un Odroid XU3 sur lequel il faut générer un système GNU/Linux. Dans le cadre d'un cours, la \school met à disposition un \emph{repository} git qui contient tout ce qu'il faut pour générer un tel système.
 
 Toutes les ressources nécessaires à la génération du système se trouvent ici :
 
@@ -185,7 +190,7 @@ Toutes les ressources nécessaires à la génération du système se trouvent ic
 
 Le système généré ne peut, dans sa configuration actuelle, permettre à Docker de se lancer. Pour pouvoir le faire, on a deux moyens à disposition : Buildroot et le kernel.
 
-Grossièrement, Buildroot permet d'ajouter des packages et de configurer son système      que le kernel permet d'ajouter des modules ou des drivers.
+Grossièrement, Buildroot permet d'ajouter des packages et de configurer son système tandis que le kernel autorise l'ajout de modules ou de drivers.
 
 \section{Vérifier que le système peut faire tourner Docker}
 
@@ -200,7 +205,7 @@ chmod +x docker-1.9.1
 ./docker-1.9.1 deamon
 \end{bashcode}
 
-S'il y a des erreurs c'est sûrement qu'il manque un ou plusieurs modules kernel. Pour vérifier que la configuration actuelle du noyau est correcte. L'équipe Docker met à disposition un script qui indique quels modules sont manquants.
+S'il y a des erreurs c'est sûrement qu'il manque un ou plusieurs modules kernel. Pour vérifier que la configuration actuelle du noyau est correcte. On trouve sur le \textit{repository} de Docker un script qui indique quels modules sont manquants.
 
 Ce script est à télécharger ici: \url{https://github.com/docker/docker/blob/master/contrib/check-config.sh}
 
@@ -263,9 +268,21 @@ Optional Features:
 
 La suite consiste à modifier le kernel pour y ajouter les modules manquants, de reflasher le système et tester à nouveau si Docker se lance.
 
-Je n'explique volontairement pas comment modifier la configuration d'un kernel Linux, car d'une part cette information se trouve facilement sur Internet ou sur les documents indiqués plus haut et d'autre une car ce n'est pas le but de ce rapport.
+La configuration d'un kernel Linux n'est volontairement pas expliquée, car d'une part cette information se trouve facilement sur Internet ou sur les documents indiqués plus haut et d'une autre car ce n'est pas le but de ce rapport.
 
 \chapter{Objectif 2 - Techniques de compilation essayées}
+
+Après avoir généré un système capable d'exécuter Docker et son \textit{deamon}, il faut (cross-)compiler Docker et le déployer sur la cible. Ce chapitre montre les diverses techniques tentées pour y parvenir.
+
+Voici les techniques essayées :
+\begin{itemize}
+\item La manière officielle
+\item Compiler directement sur une machine ARM en utilisant la manière officielle
+\item Compiler en émulant une machine ARM sur un PC de bureau avec QEMU et une image Debian
+\item Compiler en émulant une machine ARM sur un PC de bureau avec QEMU et une image Raspbian
+\item Compiler en émulant une machine ARM sur un PC de bureau avec QEMU et chroot
+\item Compiler Docker sans Docker
+\end{itemize}
 
 \section{La manière officielle}\label{maniere_officielle}
 
@@ -326,11 +343,18 @@ Remarque: dans ce cas, seul \code{make binary} est nécessaire car on n'est pas 
 Voir section \ref{maniere_officielle}.
 \subsection{Schéma}
 
-Voir section \ref{maniere_officielle}.
+Similaire à la section \ref{maniere_officielle}.
+
+\begin{figure}[H]
+    \begin{center}
+        \includegraphics[scale=0.5]{img/docker_in_docker_on_arm}
+    \end{center}
+    \caption{Docker in Docker on ARM}
+\end{figure}
 
 \subsection{Limitations}
 
-Lors de mes tests, j'ai tenté à plusieurs reprises de compiler Docker en utilisant mon Odroid C1 personnel mais je ne suis jamais arrivé à finir la compilation car elle plantait au bout d'une bonne heure.
+A l'issue de plusieurs tentatives de compiler Docker en utilisant un Odroid C1 (personnel), il n'a pas été possible de finir une compilation car ces dernières se terminaient en gelant le système au bout d'une heure.
 
 Évidemment, le temps de compilation est énormément long et on est limité par la machine avec laquelle on compile. Une autre possibilité pour l'avenir serait de passer par un prestataire Cloud qui fournit des machines ARM. Scaleway semble proposer ce genre d'offre\footnote{Scaleway: \url{https://www.scaleway.com/}}
 
@@ -347,7 +371,7 @@ Il faut d'abord installer QEMU sur une machine. J'utilise Archlinux mais cela de
 
 \label{install_qemu_arch}
 \begin{bashcode}
-yaourt -S qemu qemu-arch-extra
+pacman -S qemu qemu-arch-extra
 \end{bashcode}
 
 Pour la suite, j'ai suivi les tutoriels suivants: 
@@ -356,7 +380,7 @@ Pour la suite, j'ai suivi les tutoriels suivants:
 \item Debian Wheezy armhf images for QEMU, \url{https://people.debian.org/~aurel32/qemu/armhf/}
 \end{enumerate}
 
-Je vais pas m'étendre sur cette solution, car Debian ARM ne propose pas de package Docker et cette VM Debian ne permet pas dans sa configuration actuelle d'exécuter le binaire ARM proposé à la section \ref{binaire_arm}.
+On ne va pas s'étendre sur cette solution, car Debian ARM ne propose pas de package Docker et cette VM Debian ne permet pas dans sa configuration actuelle d'exécuter le binaire ARM proposé à la section \ref{binaire_arm}.
 
 \subsection{Schéma}
 
@@ -364,9 +388,9 @@ Comme on peut le voir à la figure \ref{fig_docker_qemu}, on reprend le même pr
 
 \begin{figure}[H]
     \begin{center}
-        \includegraphics[scale=0.5]{img/docker_qemu}
+        \includegraphics[scale=0.5]{img/docker_qemu_debian}
     \end{center}
-    \caption{Docker QEMU}
+    \caption{Docker QEMU Debian}
     \label{fig_docker_qemu}
 \end{figure}
 
@@ -400,6 +424,14 @@ Voici les tutoriels que j'ai suivis:
 \subsection{Schéma}
 
 Similaire à la technique précédente.
+
+\begin{figure}[H]
+    \begin{center}
+        \includegraphics[scale=0.5]{img/docker_qemu_raspbian}
+    \end{center}
+    \caption{Docker QEMU Raspbian}
+    \label{fig_docker_qemu_raspbian}
+\end{figure}
 
 \subsection{Limitations}
 
@@ -455,7 +487,7 @@ On compile le programme de manière "classique" sans passer par un container Doc
 Installation de Go sur Archlinux:
 
 \begin{bashcode}
-yaourt -S go
+pacman -S go
 \end{bashcode}
 
 Ensuite, on effectue les commandes suivantes:
@@ -492,13 +524,13 @@ La figure \ref{fig_docker_without_docker} montre la différence par rapport à l
 Cette technique n'est pas une bonne idée pour les raisons suivantes:
 
 \begin{itemize}
-\item Il faut installer et configurer soit même les outils de compilations alors qu'avec la manière officielle, c'est automatiquement fait dans un container.
+\item Il faut installer et configurer soi-même les outils de compilations alors qu'avec la manière officielle, c'est automatiquement fait dans un container.
 \item Lors de mes tests, je n'ai pas essayé de cross compiler vers ARM. C'est possible mais je ne l'ai pas testé.
 \item Cette solution n'apporte rien de plus par rapport à la manière officielle. C'est-à-dire qu'elle produit (ou produirait dans le cas d'une cross compilation ARM) le même binaire qu'avec la manière officielle. Donc, le \textit{deamon} ne serait de toute façon pas disponible.
 
 \end{itemize}
 
-Néanmoins, cette solution m'a permis de comprendre qu'il fallait peut-être modifier le code source de Docker afin d'autoriser l'intégration du \textit{deamon} tout en conservant la technique "Docker in Docker" afin de se faciliter la vie pour installer les outils de compilation.
+Néanmoins, cette solution a permis de comprendre qu'il fallait peut-être modifier le code source de Docker afin d'autoriser l'intégration du \textit{deamon} tout en conservant la technique "Docker in Docker" afin de se faciliter la vie pour installer les outils de compilation.
 
 \section{Conclusion sur les techniques de compilation}
 
@@ -506,7 +538,7 @@ Comme on a pu le voir, plusieurs techniques et tentatives ont été essayées. A
 
 Néanmoins, on sait que c'est possible car d'une part des distributions comme Archlinux ARM intègrent un package Docker incluant le \textit{deamon} et d'une autre car on a pu mettre la main sur un binaire isolé, voir section \ref{binaire_arm}.
 
-Encore une fois, il n'est pas impossible que l'équipe Docker supporte officiellement le \textit{deamon} pour la plateforme ARM d'ici quelques temps et ce document sera obsolète.
+Encore une fois, il n'est pas impossible que Docker supporte officiellement le \textit{deamon} pour la plateforme ARM d'ici quelques temps et ce document sera obsolète.
 
 Pour la suite du projet, j'ai installé Archlinux ARM sur l'Odroid XU3 et vais continuer avec une partie concernant la sécurité de Docker et de ces containers.
 
@@ -576,6 +608,19 @@ docker run -d -p 80:80 rpi-busybox-httpd # essayez un autre port s'il est déjà
 \end{bashcode}
 
 Rendez-vous ensuite sur \url{http://localhost:80} pour observer la page web.
+
+\chapter{Conclusion}
+A la fin de la lecture de ce rapport, on se rend compte qu'il n'y a aucune méthode testée qui a permis de (cross-)compiler Docker sur la cible. Néanmoins, ce document montre les techniques utilisées et aidera peut être en cas de reprise de cette partie du projet.
+
+Heureusement, tout ceci a permis de mieux comprendre comment Docker était construit et comment il fonctionnait de manière générale. De plus, la génération d'un système depuis zéro a permis d'apprendre beaucoup sur Linux et les systèmes embarqués en général.
+
+La suite du projet s'articulera autour de la sécurité de Docker et de sa configuration.
+
+% == Bibliography
+%\nocite{*} % cite all
+\bibliographystyle{plain}
+\bibliography{../report/bibliography}
+
 
 \begin{appendices}
   \chapter{Script : Write system on SD}\label{write_system_sd}
