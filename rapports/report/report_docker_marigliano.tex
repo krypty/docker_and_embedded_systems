@@ -463,6 +463,10 @@ Pour mettre en place ce mécanisme, il faut réaliser les opérations suivantes 
 touch /etc/subuid /etc/subgid 
 \end{bashcode}
 
+Et ajouter l'option \code{--userns-remap=default} au démarrage du \textit{deamon} Docker.
+
+Malheureusement, il a été impossible de démarrer le \textit{deamon} avec cette option que ce soit sur la cible (Archlinux, kernel 3.10.96), sur un portable Archlinux (kernel 4.5.4) ou sur un autre portable Xubuntu 16.04 (kernel 4.4.0). Le \textit{deamon} refusait de démarrer ou se bloquait. Il semblerait que cela ne soit pas un cas isolé. En effet plusieurs issues (\#20751, \#21130\footnote{Docker issues : \url{https://github.com/docker/docker/issues}}) ont été ouvertes sur le \textit{repository} Github de Docker.
+
 
 \subsection{2.11 - Use authorization plugin}
 TODO
@@ -633,7 +637,7 @@ echo "LUKS je suis ton père !" > /mnt/docker-data/starwars.txt
 \subsection{Binding des données de Docker sur la partition chiffrée}
 Maintenant, on veut faire en sorte que les données de Docker soient dans cette partition chiffrée. Pour ce faire, on va effectuer un \textit{bind mount} entre un dossier dans la partition chiffrée et le dossier de Docker.
 
-Un bind mount n'est rien d'autre qu'un montage de dossier dans un autre dossier. On va donc monter \code{/mnt/docker-data/docker} dans \code{/var/lib/docker}. De cette manière, aucune configuration supplémentaire de Docker n'est nécessaire et ceci est donc complètement transparent pour lui. Cette opération est persistante après un redémarrage. Les \textit{bind mount} sont également utilisés comme redirection pour ne pas avoir de points de montage introuvables s'ils ont été déplacés.
+Un \textit{bind mount} n'est rien d'autre qu'un montage de dossier dans un autre dossier. On va donc monter \code{/mnt/docker-data/docker} dans \code{/var/lib/docker}. De cette manière, aucune configuration supplémentaire de Docker n'est nécessaire et ceci est donc complètement transparent pour lui. Cette opération est persistante après un redémarrage. Les \textit{bind mount} sont également utilisés comme redirection pour ne pas avoir de points de montage introuvables s'ils ont été déplacés.
 
 \textbf{Attention : } Les opérations suivantes impliquent la perte de toutes les images et containers précédemment créés.
 
@@ -646,7 +650,7 @@ sudo rm -rf /var/lib/docker/ # supprime toutes les données de Docker !!!
 sudo mkdir /var/lib/docker
 \end{bashcode}
 
-Sur la cible, on fait ensuite un bind mount entre la partition chiffrée et le dossier Docker de base
+Sur la cible, on fait ensuite un \textit{bind mount} entre la partition chiffrée et le dossier Docker de base
 
 \begin{bashcode}
 sudo vim /etc/fstab
