@@ -28,7 +28,7 @@
 \setlength\headheight{14pt}
 \lhead[]{Docker and Embedded systems}
 \chead[]{}
-\rhead{\includegraphics[width=3cm]{img/mse_logo}}
+\rhead{\includegraphics[width=4cm]{img/mse_logo}}
 \lfoot[]{\nouppercase{\leftmark}}
 \cfoot[]{}
 \rfoot[]{\thepage}
@@ -41,7 +41,7 @@
 \setlength\headheight{14pt}
 \lhead[]{Docker and Embedded systems}
 \chead[]{}
-\rhead{\includegraphics[width=3cm]{img/mse_logo}}
+\rhead{\includegraphics[width=4cm]{img/mse_logo}}
 \lfoot[]{}
 \cfoot[]{}
 \rfoot[]{}
@@ -312,7 +312,7 @@ Parmi ces techniques, on peut citer :
 
 \begin{itemize}
 \item Création d'une partition chiffrée pour stocker les données de Docker (containers et images)
-\item Modification des options de lancement du \textit{deamon} Docker
+\item Modification des options de lancement du \textit{daemon} Docker
 \end{itemize}
 
 
@@ -322,7 +322,7 @@ Il s'agit d'un document à l'intention d'administrateurs systèmes ou spécialis
 Le but de ce document est de proposer un éventail de recommandations concernant la sécurité de Docker sur plusieurs points. Voici les points évalués :
 \begin{enumerate}
 \item \textit{Host Configuration} : Recommandations pour la configuration de la machine hôte
-\item \textit{Docker daemon configuration} : Recommandations concernant le comportement du \textit{deamon} Docker
+\item \textit{Docker daemon configuration} : Recommandations concernant le comportement du \textit{daemon} Docker
 \item \textit{Docker daemon configuration files} : Recommandations concernant la permission des fichiers et dossiers de configuration du \textit{daemon} Docker
 \item \textit{Container Images and Build File} : Recommandations concernant les images de base et les fichiers de build
 \item \textit{Container runtime} : Recommandations sur les options de lancement des containers
@@ -463,21 +463,131 @@ Pour mettre en place ce mécanisme, il faut réaliser les opérations suivantes 
 touch /etc/subuid /etc/subgid 
 \end{bashcode}
 
-Et ajouter l'option \code{--userns-remap=default} au démarrage du \textit{deamon} Docker.
+Et ajouter l'option \code{--userns-remap=default} au démarrage du \textit{daemon} Docker.
 
-Malheureusement, il a été impossible de démarrer le \textit{deamon} avec cette option que ce soit sur la cible (Archlinux, kernel 3.10.96), sur un portable Archlinux (kernel 4.5.4) ou sur un autre portable Xubuntu 16.04 (kernel 4.4.0). Le \textit{deamon} refusait de démarrer ou se bloquait. Il semblerait que cela ne soit pas un cas isolé. En effet plusieurs issues (\#20751, \#21130\footnote{Docker issues : \url{https://github.com/docker/docker/issues}}) ont été ouvertes sur le \textit{repository} Github de Docker.
+Malheureusement, il a été impossible de démarrer le \textit{daemon} avec cette option que ce soit sur la cible (Archlinux, kernel 3.10.96), sur un portable Archlinux (kernel 4.5.4) ou sur un autre portable Xubuntu 16.04 (kernel 4.4.0). Le \textit{daemon} refusait de démarrer ou se bloquait. Il semblerait que cela ne soit pas un cas isolé. En effet plusieurs issues (\#20751, \#21130\footnote{Docker issues : \url{https://github.com/docker/docker/issues}}) ont été ouvertes sur le \textit{repository} Github de Docker.
 
 
 \subsection{2.11 - Use authorization plugin}
-TODO
+Le modèle de permission Docker par défaut est tout ou rien. Tout utilisateur qui a accès au \textit{daemon} Docker peut effectuer n'importe quelles opérations sur tous les containers. Dans le cas où l'on a besoin d'un contrôle plus fin, il est possible de créer des plugins d'autorisation (\textit{authorization plugins}) et les ajouter à la configuration du \textit{daemon} Docker. Il est, par exemple, possible de définir que l'utilisateur Bob ne puisse pas arrêter les containers mais uniquement les lister.
+
+Un plugin d'autorisation approuve ou refuse les requêtes du client (un utilisateur)  vers le \textit{daemon} en se basant sur le contexte actuel d'authentification et le contexte de commande. Le contexte d'authentification contient toutes les détails de l'utilisateur et de la méthode d'authentification et le contexte de commande contient toutes les données utiles à la requête de l'utilisateur.
+
+\textbf{Remarque : } La communication entre le \textit{daemon} et le client\cite{docker_doc_daemon} se fait à travers un socket Unix (\code{/var/run/docker.sock}) mais peut aussi se faire via un socket TCP (\code{tcp://0.0.0.0:2375}) pour accéder au \textit{daemon} de manière distante. Grâce à ce mécanisme, Docker propose \textit{Docker Remote API}\cite{docker_doc_remote_api} une API \textit{REST-like} qui permet d'accéder à la liste des containers, des images, de créer des containers, etc.
+
+Pour créer un plugin d'autorisation, il faut respecter le contrat décrit par la \textit{Docker Plugin API}. De manière similaire à la \textit{Docker Remote API}, cette API définit un cadre afin d'étendre les possibilités de Docker comme par exemple autoriser ou refuser l'accès à certaines fonctionnalités de Docker pour un utilisateur ou un groupe donné.
+
+
+Maintenant les notions de communication client \textit{daemon} et API REST éclaircies, on peut enfin voir l'architecture de base des plugins d'autorisation.
+
+\begin{figure}[H]
+    \subfloat[Cas où la requête est autorisée]{%
+      \includegraphics[width=0.45\textwidth]{img/auth_plugins/authz_allow.png}
+    }
+    \hfill
+    \subfloat[Cas où la requête est refusée]{%
+      \includegraphics[width=0.45\textwidth]{img/auth_plugins/authz_deny.png}
+    }
+    
+    \caption[]{Scénarios d'autorisation Docker\protect{\footnotemark}}
+\end{figure}
+
+\footnotetext{Source des images : \url{https://docs.docker.com/engine/extend/plugins_authorization/}}
+
+Comme on peut le voir sur les figures ci-dessus, les requêtes sont des requêtes HTTP JSON comme on peut le trouver fréquemment dans avec les API REST.
+
+Il est possible d'utiliser plusieurs plugins en même temps. Dans ce cas, pour qu'une requête soit acceptée, il faut qu'elle puisse traverser tous les plugins (donc être approuvée par tous les plugins). Si un seul plugin refuse la requête alors elle est refusée.
+
+La création et mise en place de plugin n'est pas présenté dans ce rapport. Néanmoins, voici un exemple de plugin : \url{https://github.com/twistlock/authz}.
+
+\textbf{Analyse : } Dans le cas d'une utilisation embarquée, il n'est pas indispensable d'avoir recours à un contrôle plus fin de l'utilisation de Docker car :
+\begin{itemize}
+\item la cible est souvent mono-utilisateur
+\item les containers appartiennent tous au même utilisateur. Dans le cas d'une plateforme offrant un service de type CaaS (Containers as a Service), on peut comprendre que chaque utilisateur n'ait accès qu'aux containers qu'il lance.
+\end{itemize}
+Par conséquent, on décide de ne pas mettre en place ce mécanisme. On rappelle que ce benchmark a surtout pour but de montrer un ensemble de bonnes pratiques et de rendre attentif à certains aspects de la sécurité avec Docker. Il n'est néanmoins pas toujours indispensable d'appliquer toutes les mesures de sécurités si on en exprime pas le besoin.
 
 
 \subsection{2.12 - Configure centralized and remote logging}
-TODO
+Docker supporte plusieurs \textit{log drivers} (manière de journaliser). Par défaut, les logs des containers sont produits dans des fichiers JSON sur la machine hôte. Mais il est recommandé de centraliser les logs sur une machine distante pour voir et traiter les logs globalement.
+
+Le benchmark CIS recommande d'externaliser les logs en optant pour le log driver \textit{syslog}. \textit{Syslog}\cite{developpez_syslog}\cite{wiki_syslog} est un protocole définissant un service de journaux d'évènements d'un système informatique. Son but est de transporter par réseau les messages de journalisation générés par une application (dans ce cas Docker) vers un serveur hébergeant un serveur \textit{Syslog}. Le but étant de regrouper tous les journaux au même endroit.
+
+Pour la suite, on va mettre en place un petit exemple de démonstration qui n'a absolument pas la prétention d'être exhaustif ni sécurisé. Cet exemple a uniquement pour but de montrer un cas simple de \textit{remote logging}.
+
+Pour cet exemple, il y a à disposition un ordinateur portable qui fait office de serveur \textit{Syslog} et la cible Odroid qui va lancer un container dont les logs sont envoyés à l'ordinateur portable. On peut voir cette configuration ci-dessous.
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.7]{img/docker_syslog.png}
+\caption{Structure de démonstration Syslog}
+\end{figure}
+
+Le container (ici Ubuntu) va être lancé en indiquant que les logs doivent être envoyés au PC portable disposant d'un serveur syslog dans un container appelé rsyslog.
+
+Pour le serveur \textit{Syslog}, un container Docker prêt à l'emploi va être utilisé. Ce container utilise une image Rsyslog dont la source se trouve ici: \url{https://hub.docker.com/r/panoptix/rsyslog/}.
+
+Lancement du container Rsyslog sur le portable et affichage des logs distants : 
+\begin{bashcode}
+# démarrage du container
+docker run --name rsyslog -t -d -p 514:514/udp -p 514:514 panoptix/rsyslog
+
+# affichage des logs en temps réel
+docker exec -it rsyslog bash
+tail -f /var/log/syslog
+\end{bashcode}
+
+Lancement du container Ubuntu (producteur de logs) sur la cible :
+\begin{bashcode}
+docker run -d --log-driver=syslog --log-opt syslog-address=tcp://192.168.2.26 --log-opt tag="remote" armhf/ubuntu echo "hello from Odroid"
+\end{bashcode}
+
+Ce container va lancer la commande \code{echo} et se stopper immédiatement après. Évidemment dans un cas réel, le container effectuera des opérations plus longues et produirait un plus grande quantité de logs mais ici le but est de voir le principe général.
+
+Sur l'ordinateur portable, on peut observer l'affichage suivant : 
+\begin{bashcode}
+May 22 18:23:42 fc6dca22947a rsyslogd: [origin software="rsyslogd" swVersion="8.11.0" x-pid="1" x-info="http://www.rsyslog.com"] start
+May 22 18:38:09 192.168.2.16 docker/remote[284]: hello from Odroid
+\end{bashcode}
+
+Comme on peut le voir, on est capable de récupérer les logs de la cible sur l'ordinateur portable. 
+
+\textbf{Remarque : } Pour cet exemple, les options de logging ont été précisés au niveau du lancement du container (\code{--log-driver=XXX --log-opt syslog-address=tcp://aaa.bbb.ccc.ddd --log-opt YYY}). Idéalement, il faudrait définir par défaut toutes ces options au démarrage du \textit{daemon}. Pour ce faire, il suffit de modifier la configuration de lancement du \textit{daemon} comme il a été montré aux sections précédentes. Par exemple, on pourrait configurer le \textit{daemon} ainsi : 
+
+\begin{bashcode}
+ExecStart=/usr/bin/docker daemon -H fd:// --icc=false --storage-driver=devicemapper --log-driver=XXX --log-opt syslog-address=tcp://aaa.bbb.ccc.ddd --log-opt YYY
+\end{bashcode}
+
+\textbf{Analyse : } On l'a vu les containers produisent des logs qu'il est recommandé de centraliser sur une machine distante. Pour ce faire, Docker propose plusieurs \textit{log drivers} qui permettent ce besoin. Dans cet exemple, \textit{Syslog} a été utilisé mais il existe d'autres \textit{log drivers}\footnote{Docker log drivers : \url{https://docs.docker.com/engine/admin/logging/overview/}}. 
+
+L'exemple présenté est sommaire mais il montre le principe général. Dans un cas plus pratique, par exemple un ensemble de cibles qui transmettent la température ambiante à un serveur (ou autre application IoT), on configurerait les cibles pour émettre leurs logs sur un serveur distant. Ce serveur disposerait ensuite d'une interface web affichant l'ensemble des logs des cibles et il serait ainsi possible de suivre le fonctionnement de toutes les cibles. De plus, dans un cas pratique, il faudrait aussi veiller à regarder le contenu de l'image rsyslog téléchargée et vérifier qu'elle fasse bien uniquement ce qu'on lui demande et rien de plus ou alors créer une image rsyslog de toutes pièces.
 
 
 \subsection{2.13 - Disable operations on legacy registry (v1)}
-TODO
+Un \textit{registry} est un service responsable de l'hébergement et de la distribution d'images Docker. C'est une sorte d'App Store pour image Docker. Le \textit{registry} par défaut est Docker Hub\footnote{Docker Hub : \url{http://hub.docker.com/}}. Il est également possible d'utiliser son propre \textit{registry}. Dans tous les cas, il est recommandé de ne plus utiliser la version 1 de l'API de communication avec les \textit{registries} car la version 2 permet notamment le transfert sécurisé de données en utilisant TLS\cite{blog_docker_registry_v2}.
+
+Pour forcer Docker a n'utiliser que des \textit{registries} v2, il suffit d'ajouter l'option \code{--disable-legacy-registry} au démarrage du \textit{daemon} Docker.
+
+A faire sur la cible:
+
+\begin{bashcode}
+sudo vim /usr/lib/systemd/system/docker.service
+\end{bashcode}
+
+Ajouter l'option icc=false à l'instruction ExecStart. Le résultat devrait ressembler à ceci:
+
+\begin{bashcode}
+ExecStart=/usr/bin/docker daemon -H fd:// --icc=false --storage-driver=devicemapper --disable-legacy-registry
+\end{bashcode}
+
+Redémarrage du daemon:
+
+\begin{bashcode}
+sudo systemctl daemon-reload # recharge la configuration des services
+sudo systemctl restart docker # relance le service docker
+\end{bashcode}
+
+Résultat du benchmark après cette modification: \code{[PASS] 2.13 - Disable operations on legacy registry (v1)}.
 
 
 \subsection{4.1  - Create a user for the container}
