@@ -60,6 +60,9 @@
 % == Code snippets
 \newminted{bash}{xleftmargin=20pt, linenos=true, breaklines=true, frame=single, framesep=6pt, tabsize=2, fontfamily=courier, fontsize=\small}
 
+\newminted{text}{xleftmargin=20pt, linenos=true, breaklines=true, frame=single, framesep=6pt, tabsize=2, fontfamily=courier, fontsize=\small}
+
+
 % inline code
 \newcommand{\code}[1]{\texttt{#1}}
 
@@ -151,7 +154,7 @@
 \end{titlepage}
 
 \pagestyle{historystyle}
-\begin{versionhistory}  
+\begin{versionhistory}
   \vhEntry{0.0.1}{02.05.16}{\theauthor}{Création du document}
   \vhEntry{0.0.2}{05.05.16}{\theauthor}{Ajout des chapitres Matériel utilisé, Présentation de Docker}
     \vhEntry{0.0.3}{11.05.16}{\theauthor}{Rédaction des sections Situation actuelle, Séparation des données Docker dans une partition chiffrée, Planning }
@@ -189,7 +192,7 @@ De manière plus précise, ce projet vise à maitriser les parties suivantes:
   \item Construction d'un système Linux capable de faire tourner Docker et son \emph{daemon} en utilisant Buildroot. Pour générer le dit système, on dispose d'un \emph{repository} Gitlab hébergé à la \school
 
   \item Cross compilation de Docker et de son \emph{daemon}, capable de faire tourner des containers
-  
+
   \item Comprendre, analyser et évaluer l'aspect sécurité de Docker dans le cadre d'une utilisation avec une carte embarquée
 \end{enumerate}
 
@@ -208,14 +211,14 @@ Ce document se concentre, dès lors, sur le dernier point ainsi que sur le déro
 
 Ce chapitre présente le matériel utilisé dans le projet ainsi que son installation et sa configuration de base.
 
-Afin de réaliser ce projet, une carte embarquée \odroid a été mise à disposition afin d'y faire tourner Docker. 
+Afin de réaliser ce projet, une carte embarquée \odroid a été mise à disposition afin d'y faire tourner Docker.
 
 \section{La carte \odroid}
 
-Cette carte possède les caractéristiques suivantes \cite{hardkernel_odroid_xu3}: 
+Cette carte possède les caractéristiques suivantes \cite{hardkernel_odroid_xu3}:
 
 \begin{itemize}
-\item Samsung Exynos5422 Cortex™-A15 1.8Ghz quad core and Cortex™-A7 quad core CPUs 
+\item Samsung Exynos5422 Cortex™-A15 1.8Ghz quad core and Cortex™-A7 quad core CPUs
 \item Mali-T628 MP6(OpenGL ES 3.0/2.0/1.1 and OpenCL 1.1 Full profile)
 \item 2Gbyte LPDDR3 RAM at 933MHz (14.9GB/s memory bandwidth) PoP stacked
 \item eMMC5.0 HS400 Flash Storage
@@ -233,7 +236,7 @@ Lien vers le constructeur : \url{http://www.hardkernel.com/main/products/prdt_in
 
 \section{Installation du système}
 
-Initialement, il était prévu de générer un système d'exploitation minimal qui aurait été capable de faire tourner Docker et des containers. Malheureusement, il n'a pas été possible de cross compiler Docker \textit{et son daemon} afin de lancer des containers sur ce système minimal. Plus d'informations sont disponibles dans le rapport "\oldreportname". 
+Initialement, il était prévu de générer un système d'exploitation minimal qui aurait été capable de faire tourner Docker et des containers. Malheureusement, il n'a pas été possible de cross compiler Docker \textit{et son daemon} afin de lancer des containers sur ce système minimal. Plus d'informations sont disponibles dans le rapport "\oldreportname".
 
 Ainsi, il a été décidé, de la même manière que pour le travail de bachelor précédent, d'utiliser une distribution GNU/Linux proposant Docker dans ses packages. Le choix s'est donc porté sur \textbf{Archlinux ARM} \footnote{Arch Linux ARM : \url{https://archlinuxarm.org/}}.
 
@@ -317,7 +320,7 @@ Parmi ces techniques, on peut citer :
 
 
 \section{Passage en revue du benchmark de sécurité : CIS Docker 1.11.0 Benchmark}
-Il s'agit d'un document à l'intention d'administrateurs systèmes ou spécialistes de la sécurités qui souhaitent intégrer, développer ou sécuriser des solutions qui utilisent Docker. 
+Il s'agit d'un document à l'intention d'administrateurs systèmes ou spécialistes de la sécurités qui souhaitent intégrer, développer ou sécuriser des solutions qui utilisent Docker.
 
 Le but de ce document est de proposer un éventail de recommandations concernant la sécurité de Docker sur plusieurs points. Voici les points évalués :
 \begin{enumerate}
@@ -460,7 +463,7 @@ Il y a peu de temps, Docker ajouté le support d'un nouveau namespace\cite{docke
 Pour mettre en place ce mécanisme, il faut réaliser les opérations suivantes :
 
 \begin{bashcode}
-touch /etc/subuid /etc/subgid 
+touch /etc/subuid /etc/subgid
 \end{bashcode}
 
 Et ajouter l'option \code{--userns-remap=default} au démarrage du \textit{daemon} Docker.
@@ -488,7 +491,7 @@ Maintenant les notions de communication client \textit{daemon} et API REST écla
     \subfloat[Cas où la requête est refusée]{%
       \includegraphics[width=0.45\textwidth]{img/auth_plugins/authz_deny.png}
     }
-    
+
     \caption[]{Scénarios d'autorisation Docker\protect{\footnotemark}}
 \end{figure}
 
@@ -527,7 +530,7 @@ Le container (ici Ubuntu) va être lancé en indiquant que les logs doivent êtr
 
 Pour le serveur \textit{Syslog}, un container Docker prêt à l'emploi va être utilisé. Ce container utilise une image Rsyslog dont la source se trouve ici: \url{https://hub.docker.com/r/panoptix/rsyslog/}.
 
-Lancement du container Rsyslog sur le portable et affichage des logs distants : 
+Lancement du container Rsyslog sur le portable et affichage des logs distants :
 \begin{bashcode}
 # démarrage du container
 docker run --name rsyslog -t -d -p 514:514/udp -p 514:514 panoptix/rsyslog
@@ -544,21 +547,21 @@ docker run -d --log-driver=syslog --log-opt syslog-address=tcp://192.168.2.26 --
 
 Ce container va lancer la commande \code{echo} et se stopper immédiatement après. Évidemment dans un cas réel, le container effectuera des opérations plus longues et produirait un plus grande quantité de logs mais ici le but est de voir le principe général.
 
-Sur l'ordinateur portable, on peut observer l'affichage suivant : 
+Sur l'ordinateur portable, on peut observer l'affichage suivant :
 \begin{bashcode}
 May 22 18:23:42 fc6dca22947a rsyslogd: [origin software="rsyslogd" swVersion="8.11.0" x-pid="1" x-info="http://www.rsyslog.com"] start
 May 22 18:38:09 192.168.2.16 docker/remote[284]: hello from Odroid
 \end{bashcode}
 
-Comme on peut le voir, on est capable de récupérer les logs de la cible sur l'ordinateur portable. 
+Comme on peut le voir, on est capable de récupérer les logs de la cible sur l'ordinateur portable.
 
-\textbf{Remarque : } Pour cet exemple, les options de logging ont été précisés au niveau du lancement du container (\code{--log-driver=XXX --log-opt syslog-address=tcp://aaa.bbb.ccc.ddd --log-opt YYY}). Idéalement, il faudrait définir par défaut toutes ces options au démarrage du \textit{daemon}. Pour ce faire, il suffit de modifier la configuration de lancement du \textit{daemon} comme il a été montré aux sections précédentes. Par exemple, on pourrait configurer le \textit{daemon} ainsi : 
+\textbf{Remarque : } Pour cet exemple, les options de logging ont été précisés au niveau du lancement du container (\code{--log-driver=XXX --log-opt syslog-address=tcp://aaa.bbb.ccc.ddd --log-opt YYY}). Idéalement, il faudrait définir par défaut toutes ces options au démarrage du \textit{daemon}. Pour ce faire, il suffit de modifier la configuration de lancement du \textit{daemon} comme il a été montré aux sections précédentes. Par exemple, on pourrait configurer le \textit{daemon} ainsi :
 
 \begin{bashcode}
 ExecStart=/usr/bin/docker daemon -H fd:// --icc=false --storage-driver=devicemapper --log-driver=XXX --log-opt syslog-address=tcp://aaa.bbb.ccc.ddd --log-opt YYY
 \end{bashcode}
 
-\textbf{Analyse : } On l'a vu les containers produisent des logs qu'il est recommandé de centraliser sur une machine distante. Pour ce faire, Docker propose plusieurs \textit{log drivers} qui permettent ce besoin. Dans cet exemple, \textit{Syslog} a été utilisé mais il existe d'autres \textit{log drivers}\footnote{Docker log drivers : \url{https://docs.docker.com/engine/admin/logging/overview/}}. 
+\textbf{Analyse : } On l'a vu les containers produisent des logs qu'il est recommandé de centraliser sur une machine distante. Pour ce faire, Docker propose plusieurs \textit{log drivers} qui permettent ce besoin. Dans cet exemple, \textit{Syslog} a été utilisé mais il existe d'autres \textit{log drivers}\footnote{Docker log drivers : \url{https://docs.docker.com/engine/admin/logging/overview/}}.
 
 L'exemple présenté est sommaire mais il montre le principe général. Dans un cas plus pratique, par exemple un ensemble de cibles qui transmettent la température ambiante à un serveur (ou autre application IoT), on configurerait les cibles pour émettre leurs logs sur un serveur distant. Ce serveur disposerait ensuite d'une interface web affichant l'ensemble des logs des cibles et il serait ainsi possible de suivre le fonctionnement de toutes les cibles. De plus, dans un cas pratique, il faudrait aussi veiller à regarder le contenu de l'image rsyslog téléchargée et vérifier qu'elle fasse bien uniquement ce qu'on lui demande et rien de plus ou alors créer une image rsyslog de toutes pièces.
 
@@ -591,7 +594,149 @@ Résultat du benchmark après cette modification: \code{[PASS] 2.13 - Disable op
 
 
 \subsection{4.1  - Create a user for the container}
-TODO
+Par défaut, lorsqu'on lance un container, l'utilisateur à l'intérieur de ce container est root. Pour des raisons évidentes de sécurité, root n'est pas toujours l'utilisateur le plus adapté quand on lance un container. De plus, si par une quelconque raison, on arrive à sortir du container, on se retrouve root sur la machine hôte !
+
+Pour mitiger ces effets, il est possible de :
+\begin{itemize}
+\item Créer un utilisateur avec des droits limités dans l'image du container (\code{USER toto} dans le Dockerfile)
+\item Spécifier l'utilisateur à utiliser lors du lancement du container (\code{docker run --user toto})
+\item Faire croire au container qu'il est root alors qu'en réalité il s'agit d'un utilisateur à droits limités (user namespace)
+\end{itemize}
+
+La suite a pour but de montrer les différentes techniques pour changer l'utilisateur au sein du container.
+
+\subsubsection{État initial}
+On utilise l'image Alpine sans modifications et on observe les résultats suivants :
+
+\begin{textcode}
+docker run -it alpine /bin/sh
+/ # whoami
+root
+/ # touch /root.txt
+/ # ls /root.txt
+/root.txt
+/ # ls -l /root.txt
+-rw-r--r--    1 root     root             0 May 23 13:41 /root.txt
+\end{textcode}
+
+On voit que par défaut l'utilisateur dans le container est root. Cet utilisateur peut donc écrire un fichier à la racine.
+
+\subsubsection{Dans le Dockerfile}
+Pour l'exemple qui suit, on va créer une image qui utilise Alpine Linux comme base. Cette image est modifiée pour qu'elle se lance par défaut avec un utilisateur toto qui a des droits limités.
+
+\begin{bashcode}
+mkdir alpine-user
+vim Dockerfile
+\end{bashcode}
+
+Dans le Dockerfile, on écrit :
+\begin{bashcode}
+FROM alpine
+
+# tâches nécessitant un accès root
+# par exemple, installer des packages
+RUN apk update && apk add vim
+
+# fin des tâches demandant un accès root
+# passage à un user à droits limités
+RUN adduser -h /home/toto -s /bin/sh -D toto
+USER toto
+
+CMD ["/bin/sh"]
+\end{bashcode}
+
+On utilise donc l'image de base d'Alpine sur laquelle on effectue des tâches administratives nécessitant root. Une fois ces tâches effectuées, il n'est plus nécessaire d'être root. On crée alors un utilisateur à droit limité appelé toto. C'est cet utilisateur qui sera utilisé par défaut au lancement d'un container utilisant cette image.
+
+\begin{textcode}
+docker run -it alpine-user
+/ whoami
+toto
+/ touch /toto.txt
+touch: /toto.txt: Permission denied
+\end{textcode}
+
+Ici, on voit que l'utilisateur en cours est toto et qu'il n'a pas les droits root.
+
+\subsubsection{Au lancement du container}
+Il est également possible de spécifier l'utilisateur à utiliser au lancement du container grâce à l'option \code{--user}.
+
+Les cas suivants sont testés :
+\begin{itemize}
+\item root : on peut spécifier root si l'image a défini un autre utilisateur par défaut. Utilisation déconseillée.
+\item nobody : l'utilisateur nobody est un utilisateur aux droits très limités et la plupart des distributions l'intègre de base donc pas besoin le créer expressément.
+\item gary : cas où l'utilisateur existe sur l'hôte mais pas dans le container
+\item toto : cas où l'utilisateur n'existe pas sur l'hôte mais dans le container
+\end{itemize}
+
+\textbf{Utilisateur root} :
+\begin{textcode}
+> docker run --user root -it alpine-user
+/ # whoami
+root
+/ # touch /root.txt
+/ # ls -al /root.txt
+-rw-r--r--    1 root     root             0 May 23 19:35 /root.txt
+\end{textcode}
+
+Le container est lancé en root. On peut écrire à la racine sans souci.
+
+\textbf{Utilisateur root} :
+\begin{textcode}
+> \$ docker run --user nobody -it alpine-user
+~ \$ whoami
+nobody
+~ \$ touch /nobody.txt
+touch: /nobody.txt: Permission denied
+
+\end{textcode}
+
+Le container est lancé avec l'utilisateur nobody (présent sur l'OS hôte et surtout dans le container). L'écriture sur \code{/} est refusée.
+
+
+\textbf{Utilisateur gary} :
+\begin{textcode}
+> docker run --user gary -it alpine-user
+docker: Error response from daemon: linux spec user: Unable to find user gary.
+\end{textcode}
+
+Lancer un container avec un utilisateur qui n'existe pas dans le container n'est pas possible.
+
+\textbf{Utilisateur toto} :
+\begin{textcode}
+> \$ docker run --user toto -it alpine-user
+/ \$ whoami
+toto
+/ \$ touch /toto.txt
+touch: /toto.txt: Permission denied
+\end{textcode}
+
+Le container est lancé avec l'utilisateur toto (absent sur l'OS hôte et mais présent dans le container). L'écriture sur \code{/} est refusée.
+
+\textbf{Analyse :} on remarque que par défaut, les containers sont lancés en root. Si le container n'a pas besoin d'avoir des accès root, il est fortement recommandé de construire une image mettant en place un utilisateur à droits limités. Dans le cas où l'on utilise une image écrite par quelqu'un d'autre, on peut essayer de lancer avec l'utilisateur nobody si on estime qu'elle n'a pas besoin des droits root pour fonctionner. Évidemment, cela ne fonctionnera pas si l'image a réellement besoin des droits root comme par exemple pour installer des packages.
+
+Le dernier cas concerne l'utilisation du user namespace. Ici c'est différent, on mappe un utilisateur standard de la machine hôte à l'utilisateur root du container. Ainsi, on peut effectuer des tâches nécessitant les droits root dans le container. Cependant, si le processus au sein du container vient à s'en échapper, il n'est pas root mais l'utilisateur mappé aux droits limités.
+
+\subsubsection{En utilisant le user namespace}
+TODO voir chapitre dédié
+
+\begin{bashcode}
+gary@gary-portable ~/alpine-hello-world
+> \$ docker run -it alpine /bin/sh
+/ # whoami
+root
+/ # exit
+
+gary@gary-portable ~/alpine-hello-world
+> \$ docker run --user nobody -it alpine /bin/sh
+~ \$ whoami
+nobody
+~ \$ whoami
+~ \$ exit
+
+gary@gary-portable ~/alpine-hello-world                                                                    [11:21:48]
+> \$ docker run --user gary -it alpine /bin/sh
+docker: Error response from daemon: linux spec user: Unable to find user gary.
+\end{bashcode}
 
 
 \subsection{4.5  - Enable Content trust for Docker}
@@ -647,7 +792,7 @@ Actuellement, il n'y a qu'une partition sur la cible; la partition principale. I
     \subfloat[Redimensionnement de la partition principale]{%
       \includegraphics[width=0.45\textwidth]{img/luks/gparted2.png}
     }
-        
+
     \subfloat[Création de la partition pour les données Docker]{%
       \includegraphics[width=0.45\textwidth]{img/luks/gparted3.png}
     }
@@ -655,7 +800,7 @@ Actuellement, il n'y a qu'une partition sur la cible; la partition principale. I
     \subfloat[Confirmation]{%
       \includegraphics[width=0.45\textwidth]{img/luks/gparted4.png}
     }
-    
+
      \subfloat[Partitionnement en cours...]{%
       \includegraphics[width=0.45\textwidth]{img/luks/gparted5.png}
     }
@@ -678,7 +823,7 @@ Maintenant que la carte SD correctement partitionnée, il faut créer la partiti
     \subfloat[Sélectionner "Encrypted, compatible with Linux systems (LUKS + ext4)" et saisir une passphrase (mot de passe)]{%
       \includegraphics[width=0.45\textwidth]{img/luks/gnome-disks2.png}
     }
-        
+
     \subfloat[La partition chiffrée est créée]{%
       \includegraphics[width=0.45\textwidth]{img/luks/gnome-disks3.png}
     }
@@ -689,7 +834,7 @@ Maintenant que la carte SD correctement partitionnée, il faut créer la partiti
 \subsection{Montage manuel de la partition chiffrée}
 Maintenant que la partition chiffrée a été créée, on peut replacer la carte SD dans la cible et la démarrer.
 
-Pour monter manuellement la partition, il faut réaliser les commandes suivantes : 
+Pour monter manuellement la partition, il faut réaliser les commandes suivantes :
 \begin{bashcode}
 sudo mkdir /mnt/docker-data
 sudo cryptsetup luksOpen /dev/mmcblk0p2 docker-data
@@ -699,7 +844,7 @@ sudo mount /dev/mapper/docker-data /mnt/docker-data/
 \code{/dev/mmcblk0p2} représente la partition chiffrée de la carte SD.
 
 \subsection{Montage au boot de la partition chiffrée}
-Monter manuellement la partition n'est pas une solution possible si l'on souhaite y mettre les données de Docker dessus. En effet, pour que Docker stocke ces données (rappel: les images et les containers) dans la partition chiffrée, il faut monter cette partition au démarrage de la cible et créer un \textit{bind mount} sur \code{/var/lib/docker}. 
+Monter manuellement la partition n'est pas une solution possible si l'on souhaite y mettre les données de Docker dessus. En effet, pour que Docker stocke ces données (rappel: les images et les containers) dans la partition chiffrée, il faut monter cette partition au démarrage de la cible et créer un \textit{bind mount} sur \code{/var/lib/docker}.
 
 
 Avant d'effectuer le \textit{bind mount}, il faut faire en sorte de monter la partition chiffrée au boot.
@@ -710,7 +855,7 @@ Pour monter la partition chiffrée au démarrage du système, il faut ouvrir le 
 docker-data /dev/mmcblk0p2  none luks
 \end{bashcode}
 
-De manière similaire, il faut ajouter cette ligne dans le fichier \code{/etc/fstab} : 
+De manière similaire, il faut ajouter cette ligne dans le fichier \code{/etc/fstab} :
 \begin{bashcode}
 /dev/mapper/docker-data /mnt/docker-data ext4 rw 0 0
 \end{bashcode}
@@ -806,7 +951,7 @@ TODO dire ce qui s'est passé et ce qui serait bien de faire en plus.
 
 
 \chapter{Création et utilisation des images Docker}\label{creation_utilisation_images_docker}
-TODO : ce chapitre montre comment et pourquoi créer et utiliser des images Docker qui soient sécurisées et adaptées au monde de l'embarqué (taille principalement). Utilisation des hash cryptographiques pour l'OS utilisé et les versions des logiciels installés. 
+TODO : ce chapitre montre comment et pourquoi créer et utiliser des images Docker qui soient sécurisées et adaptées au monde de l'embarqué (taille principalement). Utilisation des hash cryptographiques pour l'OS utilisé et les versions des logiciels installés.
 Montrer un cas pratique avec une image commune basée sur alpine linux dire ce que ca apporte de travailler ainsi et pourquoi il faut le faire.
 
 
