@@ -712,35 +712,72 @@ touch: /toto.txt: Permission denied
 
 Le container est lancé avec l'utilisateur toto (absent sur l'OS hôte et mais présent dans le container). L'écriture sur \code{/} est refusée.
 
-\textbf{Analyse :} on remarque que par défaut, les containers sont lancés en root. Si le container n'a pas besoin d'avoir des accès root, il est fortement recommandé de construire une image mettant en place un utilisateur à droits limités. Dans le cas où l'on utilise une image écrite par quelqu'un d'autre, on peut essayer de lancer avec l'utilisateur nobody si on estime qu'elle n'a pas besoin des droits root pour fonctionner. Évidemment, cela ne fonctionnera pas si l'image a réellement besoin des droits root comme par exemple pour installer des packages.
+\subsubsection{Analyse}
+On remarque que par défaut, les containers sont lancés en root. Si le container n'a pas besoin d'avoir des accès root, il est fortement recommandé de construire une image mettant en place un utilisateur à droits limités. Dans le cas où l'on utilise une image écrite par quelqu'un d'autre, on peut essayer de lancer avec l'utilisateur nobody si on estime qu'elle n'a pas besoin des droits root pour fonctionner. Évidemment, cela ne fonctionnera pas si l'image a réellement besoin des droits root comme par exemple pour installer des packages.
 
 Le dernier cas concerne l'utilisation du user namespace. Ici c'est différent, on mappe un utilisateur standard de la machine hôte à l'utilisateur root du container. Ainsi, on peut effectuer des tâches nécessitant les droits root dans le container. Cependant, si le processus au sein du container vient à s'en échapper, il n'est pas root mais l'utilisateur mappé aux droits limités.
 
-\subsubsection{En utilisant le user namespace}
-TODO voir chapitre dédié
-
-\begin{bashcode}
-gary@gary-portable ~/alpine-hello-world
-> \$ docker run -it alpine /bin/sh
-/ # whoami
-root
-/ # exit
-
-gary@gary-portable ~/alpine-hello-world
-> \$ docker run --user nobody -it alpine /bin/sh
-~ \$ whoami
-nobody
-~ \$ whoami
-~ \$ exit
-
-gary@gary-portable ~/alpine-hello-world                                                                    [11:21:48]
-> \$ docker run --user gary -it alpine /bin/sh
-docker: Error response from daemon: linux spec user: Unable to find user gary.
-\end{bashcode}
-
 
 \subsection{4.5  - Enable Content trust for Docker}
-TODO
+\textbf{Rappel :} Un \textit{registry} (Docker Hub par exemple) héberge des \textit{repositories} et un \textit{repository} contient plusieurs images. Chacune de ses images est une "couche" de l'application ou du processus proposé(e) par un utilisateur.
+
+Docker Content Trust\cite{blog_docker_content_trust}\cite{mouat_2005} est une fonctionnalité de Docker arrivée avec la version 1.8 qui permet de vérifier les auteurs des images Docker. Avant qu'un auteur publie une image sur un \textit{registry} distant (par exemple Docker Hub), Docker Engine signe l'image en local avec la clé privée de l'auteur. Quand l'image est rapatriée (\textit{pulled}), Docker Engine compare la clé publique contenue dans le certificat qui accompagne l'image avec la clé publique de l'auteur pour vérifier que l'image téléchargée n'a pas été altérée et est à jour.
+
+Docker Content Trust n'est pas activé par défaut. Une fois activé, ces mécanismes de vérifications et de contrôles sont transparents pour l'utilisateur Docker. Les commandes \code{docker pull}, \code{docker push}, \code{docker build}, \code{docker create} et \code{docker run} sont utilisées de la même façon à la différence qu'elles opèrent sur du contenu signé.
+
+Voici dans les grandes lignes comment fonctionne ce système :
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=1]{img/dct1.png}
+\caption{Vue d'ensemble de Docker Content Trust}
+\end{figure}
+
+Soient deux utilisateurs Docker, Alice et Bob. Alice est une utilisatrice qui met à disposition des images dans un \textit{repository} sur un \textit{registry} (Docker Hub, par exemple). Bob est un utilisateur qui veut télécharger (comprendre \textit{pull}) les images qu'Alice a mises à disposition.
+
+Quand Alice désire publier une image dans un de ses \textit{repositories} appelé AliceSoft, deux clés sont générées, la \textit{Tagging Key} et la \textit{Offline Key}. Ces deux clés sont détaillées plus bas. Les images sont signées en utilisant la \textit{Tagging Key} qui est signée avec la \textit{Offline Key}.
+
+Bob désire ensuite télécharger cette image. Comme c'est la première fois que Bob télécharge une image du \textit{repository} AliceSoft, Docker Engine va télécharger en HTTPS le certificat de ce \textit{repository}. Les fois suivantes, on réutilise le certificat téléchargé. Puis, Docker Engine compare la clé contenue dans le certificat avec la clé de l'image téléchargée.
+
+Docker Content Trust utilise deux clés distinctes, une \textit{Offline Key} et une \textit{Tagging Key} qui sont générées la première fois qu'un auteur pousse une image. Elles sont stockés côté client (chez Alice dans l'exemple). Chacun de ses \textit{repositories} possède une \textit{Tagging Key} unique. La première fois que Bob veut télécharger une image d'Alice, il établit une confiance avec le \textit{repository} d'Alice en utilisant la \textit{Offline Key}.
+
+\begin{itemize}
+\item \textbf{La Tagging Key} : est générée pour chaque nouveau \textit{repository} qu'un auteur possède. Elles peuvent être exportées et partagées avec toute personne ou système qui exprime le besoin de signer du contenu (typiquement une image) dans ce \textit{repository}, par exemple, un \textit{repository} appartenant à un groupe de personnes.
+\item \textbf{La Offline Key} : est la clé la plus importante car c'est elle qui permet d'établir la confiance pour le \textit{repository} ou les \textit{repositories} qu'elle contrôle. Cette clé est aussi utilisée pour effectuer des rotations sur les autres clés existantes (si une clé a été compromise par exemple). La \textit{Offline Key} est secrète, doit être stockée dans un endroit sûr et doit également être sauvegardée.
+\end{itemize}
+
+
+pourquoi on le change
+
+Grâce à ces protections, Docker annonce une meilleure sécurité quant à la provenance des images téléchargées. On évite ainsi plusieurs types d'attaque comme :
+\begin{itemize}
+\item Man In the Middle (l'attaquant se place entre le \textit{registry} et l'utilisateur et altère l'image téléchargée)
+\item Les attaques par rejeu (un attaquant force l'utilisateur à télécharger une image valide mais ancienne dont il sait qu'elle contient des vulnérabilités connues)
+\item Les clés compromises (l'attaquant à volé la clé ou l'a cassée)
+\end{itemize}
+
+Ces garanties sont justifiées sur le blog de Docker à l'adresse suivante : \url{https://blog.docker.com/2015/08/content-trust-docker-1-8/}.
+
+\subsubsection{Mise en place}
+Pour activer Docker Content Trust, il suffit de définir la variable d'environnement \linebreak \code{export DOCKER\_CONTENT\_TRUST=1}. Définir une variable d'environnement dans un terminal est valable durant la durée de la session et pour l'utilisateur courant. Pour définir cette variable de manière permanente et pour tous les utilisateurs, il peut modifier le fichier \code{/etc/environment} et ajouter la variable d'environnement voulue.
+
+\begin{bashcode}
+sudo vim /etc/environment
+\end{bashcode}
+
+Et ajouter :
+\begin{bashcode}
+#
+# This file is parsed by pam_env module
+#
+# Syntax: simple "KEY=VAL" pairs on separate lines
+#
+DOCKER_CONTENT_TRUST=1
+\end{bashcode}
+
+Tests (bench et différents pull pour voir)
+
+
 
 \subsection{5.3  - Restrict Linux Kernel Capabilities within containers}
 TODO
@@ -947,7 +984,7 @@ Stocker les données de Docker dans une partition chiffrée est une bonne initia
 \end{itemize}
 
 \section{Conclusion sur la configuration du système d'exploitation hôte}
-TODO dire ce qui s'est passé et ce qui serait bien de faire en plus.
+TODO dire ce qui s'est passé et ce qui serait bien de faire en plus (project nautilus).
 
 
 \chapter{Création et utilisation des images Docker}\label{creation_utilisation_images_docker}
