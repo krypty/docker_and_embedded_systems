@@ -775,18 +775,231 @@ Et ajouter :
 DOCKER_CONTENT_TRUST=1
 \end{bashcode}
 
-Tests (bench et différents pull pour voir)
+Après avoir redémarré, on relance le benchmark et on obtient la sortie suivante : \code{[PASS] 4.5  - Enable Content trust for Docker}
+
+\subsubsection{Utilisation dans la pratique}
+Désormais, tous les \code{docker pull} que l'on fait exige que les images téléchargées soient signées. 
+
+Il existe donc 3 cas :
+\begin{enumerate}
+\item L'image n'est pas signée et fait une erreur
+\item L'image n'est pas signée mais on veut quand même la télécharger
+\item L'image est signée
+\end{enumerate}
+
+Voici les 3 cas en pratique :
+
+\textbf{1. Image non-signée :}
+\begin{textcode}
+> docker pull armv7/armhf-debian
+Using default tag: latest
+Error: remote trust data does not exist for docker.io/armv7/armhf-debian: notary.docker.io does not have trust data for docker.io/armv7/armhf-debian
+\end{textcode}
+
+Quand on essaie de \textit{pull} une image (mais c'est également le cas pour d'autres commandes comme \code{docker run}) et que celle-ci n'est pas signée, alors Docker indique qu'il n'a pas pu établir une confiance avec cette image.
+
+Ici, il existe deux choix : soit on ignore ce message et on télécharge tout de même cette image, soit on cherche une autre image similaire qui a été signée.
+
+\textbf{2. Image non-signée, avertissement ignoré :}
+
+Pour quand même télécharger cette image, on peut utiliser le flag \code{--disable-content-trust} sur les commandes Docker concernées ou alors on peut redéfinir la variable d'environnement \code{DOCKER\_CONTENT\_TRUST} à 0.
+
+\begin{textcode}
+> docker pull --disable-content-trust armv7/armhf-debian
+Using default tag: latest
+latest: Pulling from armv7/armhf-debian
+cc738ad9b216: Pull complete 
+a3ed95caeb02: Pull complete 
+Digest: sha256:7c04a67927a012551a19d359f745480ae77afed229eb1ab0eac403b45fbf5f37
+Status: Downloaded newer image for armv7/armhf-debian:latest
+\end{textcode}
+
+On note que pour lancer un container, il faut repréciser le flag sans quoi le container refusera de se lancer.
+
+\begin{textcode}
+> docker run -it armv7/armhf-debian
+docker: notary.docker.io does not have trust data for docker.io/armv7/armhf-debian.
+See 'docker run --help'.
+\end{textcode}
+
+\begin{textcode}
+> docker run --disable-content-trust -it armv7/armhf-debian
+root@28f7dca7a5f5:/# 
+\end{textcode}
+
+\textbf{3. Image signée}
+Dans la pratique on se rend compte qu'il n'y a pas encore beaucoup d'images compatible ARM qui sont signées. D'ailleurs pour cet exemple, on \code{pull} une image signée x64 sur la cible. Il est évident que cette image ne va pas pouvoir être lancée mais c'est juste pour l'exemple.
+
+\begin{textcode}
+> docker pull ubuntu
+Using default tag: latest
+Pull (1 of 1): ubuntu:latest@sha256:1bea66e185d[...]
+sha256:1bea66e185d[...]: Pulling from library/ubuntu
+203137e8afd5: Pull complete 
+2ff1bbbe9310: Pull complete 
+933ae2486129: Pull complete 
+a3ed95caeb02: Pull complete 
+Digest: sha256:1bea66e185d[...]
+Status: Downloaded newer image for ubuntu@sha256:1bea66e185d[...]
+Tagging ubuntu@sha256:1bea66e185d[...] as ubuntu:latest
+\end{textcode}
+
+Heureusement, il existe un moyen de garantir que l'intégrité de l'image même si celle-ci n'a pas été signée. La seule condition est qu'il faut connaître le \textit{digest} (empreinte) de l'image.
+
+\begin{textcode}
+> docker pull armhf/alpine@sha256:9f7b4923[...]
+sha256:9f7b4923[...]: Pulling from armhf/alpine
+06da76670c3f: Pull complete 
+Digest: sha256:9f7b4923[...]
+Status: Downloaded newer image for armhf/alpine@sha256:9f7b4923[...]
+\end{textcode}
+
+Ici par exemple, on remarque que l'image \code{armhf/alpine:latest} n'est pas signée. Par contre, si on spécifie le \textit{digest} de cette image, il est possible de la téléchargée sans avoir besoin d'indiquer le flag \code{--disable-content-trust}.
+
+De plus, indiquer le \textit{digest} dans le Dockerfile pour la commande \code{FROM xxx} est une bonne pratique car on s'assure de toujours avoir la même image qui est téléchargée et de ne pas avoir de surprise si l'image a été mise à jour.
+
+On peut trouver ce \textit{digest} quand on pull une image :
+\begin{textcode}
+Digest: sha256:9f7b4923[...]
+\end{textcode}
+
+Ou avec la commande \code{docker images --no-trunc} :
+
+\begin{textcode}
+> docker images --no-trunc
+REPOSITORY          TAG     IMAGE ID           CREATED        SIZE
+armhf/alpine        <none>  sha256:a9e1[...]   14 hours ago   3.906 MB
+ubuntu              latest  sha256:9743[...]   9 weeks ago    187.9 MB
+ubuntu              <none>  sha256:9743[...]   9 weeks ago    187.9 MB
+armv7/armhf-ubuntu  latest  sha256:43b1[...]   7 months ago   130.5 MB
+armv7/armhf-debian  latest  sha256:8d68[...]   8 months ago   104.9 MB
+\end{textcode}
+
+\subsection{5.3  - Restrict Linux Kernel Capabilities within containers}\label{ss-restrict-kernel-capa}
+Les containers sont lancés avec des permissions (\textit{kernel capabilities}) par défaut. Ces permissions permettent d'effectuer des opérations qui demandent les droits root. Par exemple. la permission \code{net\_bind\_service} permet à un container de \textit{binder} un port privilégié (ports inférieurs à 1024). Il est possible et recommandé de ne donner que les permissions qui sont strictement nécessaire à l'exécution du container. L'idée ici étant de ne donner aux containers qu'une partie des droits root, voire carrément aucun.
+
+Il est par exemple inutile pour la plupart des containers d'avoir la permission \code{SYS\_MODULE} qui permet charger et de décharger des modules kernel.
+
+Les permissions accordées par défaut sont les suivantes\cite{github_docker_kernel_capabilities} :
+\begin{itemize}
+\item CAP\_CHOWN
+\item CAP\_DAC\_OVERRIDE
+\item CAP\_FSETID
+\item CAP\_FOWNER
+\item CAP\_MKNOD
+\item CAP\_NET\_RAW
+\item CAP\_SETGID
+\item CAP\_SETUID
+\item CAP\_SETFCAP
+\item CAP\_SETPCAP
+\item CAP\_NET\_BIND\_SERVICE
+\item CAP\_SYS\_CHROOT
+\item CAP\_KILL
+\item CAP\_AUDIT\_WRITE
+\end{itemize}
+
+La liste complète des permissions et leur description se trouve ici : \url{http://man7.org/linux/man-pages/man7/capabilities.7.html}
+
+Pour ajouter ou supprimer des permissions, on utilise les arguments \code{--cap-add} et \code{--cap-drop} de la commande \code{docker run}.
+
+Voici un exemple. Ici on veut montrer ce qui se passe quand on retire la permission d'effectuer un \code{chroot}.
+\begin{textcode}
+> docker run -it armhf/alpine /bin/sh
+/ # ls
+bin   etc   lib       media   proc   run    sys   usr
+dev   home  linuxrc   mnt     root   sbin   tmp   var
+/ # mkdir rootfs
+/ # cd rootfs/
+/rootfs # cp -R ../bin/ .
+/rootfs # ls
+bin   dev   etc   home   lib   linuxrc  media   mnt   proc
+
+/rootfs # chroot .
+/ # ls
+bin   dev   etc   home   lib   linuxrc  media   mnt   proc
+/ # exit
+/rootfs # ls
+bin   dev   etc   home   lib   linuxrc  media   mnt   proc
+/rootfs # exit
 
 
+> docker run --cap-drop="SYS_CHROOT" -it armhf/alpine /bin/sh
+/ # mkdir rootfs
+/ # cd rootfs/
+/rootfs # cp -R ../bin .
+/rootfs # chroot .
+chroot: can't change root directory to '.': Operation not permitted
+/rootfs #
+\end{textcode}
 
-\subsection{5.3  - Restrict Linux Kernel Capabilities within containers}
-TODO
+Idéalement, il faudrait retirer toutes les permissions pour un container et n'ajouter que celles qui sont requises pour le bon fonctionnement du container. Pour ce faire, on peut utiliser l'argument \code{--cap-drop=all} pour retirer toutes les permissions et on utilise ensuite l'argument \code{--cap-add=\{"permission1", "permission2, "permissionN"\}} pour ajouter les permissions requises.
 
 \subsection{5.4  - Do not use privileged containers}
-TODO explain only
+Le flag \code{--privileged} accorde toutes les permissions kernel à un container. Il ne faut pas utiliser ce flag mais il faut plutôt ajouter uniquement les permissions requises. Voir sous-section \ref{ss-restrict-kernel-capa}.
 
 \subsection{5.6  - Do not run ssh within containers}
-TODO explain only
+Pour communiquer avec les containers depuis l'extérieur, on serait tenter de démarrer un \textit{daemon} ssh à l'intérieur de ceux-ci. Mais ceci comporte plusieurs inconvénients :
+
+\begin{itemize}
+\item Si on a plusieurs containers et que chacun d'eux démarre un \textit{daemon} ssh, il faut s'assurer qu'ils soient à jour. Si on faille de ssh est découverte, il faut mettre à jour et reconstruire tous les containers.
+\item Il faut gérer les accès et politiques de sécurité pour chaque serveur ssh
+\item Il faut gérer le stockage des clés et des mots de passes pour chaque serveur ssh
+\end{itemize}
+
+Il est plus sûr de n'avoir qu'un serveur ssh sur la machine hôte et d'ensuite pouvoir exécuter des commandes sur le container voulu. Pour ce faire on utilise la commande \code{docker exec} :
+
+\begin{textcode}
+docker exec <container_id> <command> 
+\end{textcode}
+
+Les principales raisons pour lesquelles on voudrait se connecter en ssh sur un container sont les suivantes :
+\begin{itemize}
+\item Sauvegarde des données du container dans un autre endroit
+\item Vérification des logs
+\item Modification de la configuration d'un container
+\item Redémarrage d'un service
+\end{itemize}
+
+Les 3 premiers points peuvent être résolus en utilisant des volumes. Un volume est un dossier stocké sur la machine hôte qui est monté dans un dossier du container. Grâce à ce mécanisme, il est possible de persister des données générées par un container mais aussi de pouvoir partager ce volume et les données qu'il contient avec d'autres containers.
+
+Dans l'exemple qui suit, on veut sauver les logs de deux containers. Pour ce faire, on va utiliser un volume qu'on appelle \textit{logs}. Ce volume est utilisé par les deux containers pour stocker les logs qu'ils produisent.
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.2]{img/docker-volume-1.png}
+\caption{Deux containers et un volume \textit{logs}}
+\end{figure}
+
+Démarrage des deux containers (effectuer ce qui suit deux fois) et génération d'un faux log afin de montrer comment il est possible de récupérer ces logs.:
+\begin{textcode}
+[alarm@alarm ~] > mkdir -p logs/XXX
+[alarm@alarm ~] > docker run -v `pwd`/logs/XXX:/var/log -it armhf/alpine /bin/sh
+
+/ # echo "Error from container XXX..." > /var/log/error_`date +"%Y-%m-%d"`.log
+
+[alarm@alarm ~]> cd logs/XXX/
+[alarm@alarm XXX]> ls
+error_2016-05-29.log
+[alarm@alarm XXX]> cat error_2016-05-29.log 
+Error from container XXX...
+\end{textcode}
+
+\textbf{Remarque :} XXX est à remplacer par A et B, le nom des deux containers.
+
+Ce volume peut être ensuite accédé en lecture seule par un container de log qui aurait pour but de faire remonter les logs sur un serveur de log ou dans le cloud par exemple.
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.25]{img/docker-volume-2.png}
+\caption{Centralisation des logs et sauvegarde de ceux-ci}
+\end{figure}
+
+Pour le dernier cas, le redémarrage d'un service, il est possible d'ouvrir un terminal dans un container lancé grâce à la commande suivante :
+\begin{bashcode}
+docker exec -it <container-id> /bin/sh
+\end{bashcode}
+
+\textbf{Remarque : } Le terminal sera lancé avec le même utilisateur que celui précisé au lancement du container. Cet utilisateur n'a peut être pas les droits de gérer les services (ce qui serait légitime). Dans ce cas, on peut toujours envoyer des signals avec la commande \code{docker kill -s <signal>} ou se connecter au socket démarré par le service pour lui demander de redémarrer. Les détails de cette technique sont expliqués ici : \url{https://blog.docker.com/2014/06/why-you-dont-need-to-run-sshd-in-docker/}. L'autre idée est de concevoir son container de manière à pouvoir le détruire et en recréer un autre sans que cela gêne le fonctionnement général. En théorie, cette solution est tout à fait viable car les containers Docker sont conçus pour être isolés et indépendants. A partir du moment où les données ne sont pas stockées uniquement dans le container, il ne devrait pas y avoir de problèmes.
 
 \subsection{5.10 - Limit memory usage for container}
 TODO
@@ -984,7 +1197,7 @@ Stocker les données de Docker dans une partition chiffrée est une bonne initia
 \end{itemize}
 
 \section{Conclusion sur la configuration du système d'exploitation hôte}
-TODO dire ce qui s'est passé et ce qui serait bien de faire en plus (project nautilus).
+TODO dire ce qui s'est passé et ce qui serait bien de faire en plus (project nautilus), GRSecurity, SELinux, AppArmor.
 
 
 \chapter{Création et utilisation des images Docker}\label{creation_utilisation_images_docker}
