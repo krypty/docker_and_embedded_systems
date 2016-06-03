@@ -18,6 +18,7 @@
 \usepackage{lmodern}
 \usepackage{pdflscape}
 \usepackage{subfig}
+\usepackage{color}
 
 % == Header and Footer
 \usepackage{fancyhdr}
@@ -1002,13 +1003,224 @@ docker exec -it <container-id> /bin/sh
 \textbf{Remarque : } Le terminal sera lancé avec le même utilisateur que celui précisé au lancement du container. Cet utilisateur n'a peut être pas les droits de gérer les services (ce qui serait légitime). Dans ce cas, on peut toujours envoyer des signals avec la commande \code{docker kill -s <signal>} ou se connecter au socket démarré par le service pour lui demander de redémarrer. Les détails de cette technique sont expliqués ici : \url{https://blog.docker.com/2014/06/why-you-dont-need-to-run-sshd-in-docker/}. L'autre idée est de concevoir son container de manière à pouvoir le détruire et en recréer un autre sans que cela gêne le fonctionnement général. En théorie, cette solution est tout à fait viable car les containers Docker sont conçus pour être isolés et indépendants. A partir du moment où les données ne sont pas stockées uniquement dans le container, il ne devrait pas y avoir de problèmes.
 
 \subsection{5.10 - Limit memory usage for container}
-TODO
+Il est possible et recommandé de limiter les ressources offertes à un container. Ces ressources peuvent être entre autres la mémoire vive ou l'utilisation CPU (voir section sous section suivante).
+
+Limiter les ressources peut être une nécessité afin d'éviter un débordement d'un container. Si celui-ci se met à consommer toutes les ressources car il est victime d'une attaque (déni de service par exemple) ou d'un bug, le système risque de se geler et l'on devra être obligé de le redémarrer. Ceci est d'autant plus problématique si d'autres containers étaient lancés. En limitant les ressources d'un container, celui-ci pourrait dysfonctionner sans gêner les autres processus (ou containers) de la machine hôte.
+
+Pour mettre en place cette limitation, il suffit d'ajouter le flag \code{--memory}. Dans l'exemple qui suit, on limite la mémoire à 100 MB.
+
+\begin{bashcode}
+docker run -it --memory 100m armhf/alpine /bin/sh
+\end{bashcode}
+
+Voici un exemple plus complet fortement inspiré de ce site \url{https://goldmann.pl/blog/2014/09/11/resource-management-in-docker/}. On utilise un programme appelé \code{stress} qui permet, on le devine, de stresser une machine. Voici le Dockerfile permettant de créer l'image \code{docker-test-memory} que l'on va utiliser.
+
+\begin{textcode}
+FROM armhf/ubuntu
+
+MAINTAINER "Gary Marigliano" <gary.marigliano@master.hes-so.ch>
+
+RUN apt-get update && apt-get install -y stress
+
+ENTRYPOINT ["stress"]
+\end{textcode}
+
+On construit l'image :
+\begin{bashcode}
+docker build -t docker-test-memory .
+\end{bashcode}
+
+On va maintenant "stresser" avec 128 MB sans restriction sur la mémoire :
+\begin{textcode}
+docker run -d docker-test-memory --vm 1 --vm-bytes 128M --vm-hang 0
+\end{textcode}
+
+On peut observer la consommation mémoire du container avec la commande \break \code{docker stats <container\_id>} :
+
+\begin{bashcode}
+CONTAINER           CPU %   MEM USAGE/LIMIT       MEM %   NET I/O
+a33c026010a1        0.00%   128.1 MiB/846.6 MiB   15.13%  594 B/468 B
+\end{bashcode}
+
+Si on lance le même stress test mais avec une restriction de la mémoire :
+\begin{textcode}
+docker kill a33c026010a1
+docker run -d --memory 256M docker-test-memory --vm 1 --vm-bytes 128M --vm-hang 0
+\end{textcode}
+
+On voit désormais qu'une limite a été appliquée. Comme cette limite n'a pas été franchie, le container continue à s'exécuter.
+
+\begin{textcode}
+CONTAINER           CPU %   MEM USAGE/LIMIT     MEM %   NET I/O
+7797ab311f53        0.00%   128.1 MiB/256 MiB   50.05%  468 B/468 B
+\end{textcode}
+
+Désormais, on va dépasser volontairement la mémoire autorisée pour voir se qu'il se passe :
+\begin{textcode}
+docker kill 7797ab311f53
+docker run -d --memory 64M docker-test-memory --vm 1 --vm-bytes 128M --vm-hang 0
+\end{textcode}
+
+Résultat, le container crashe sans perturber le système hôte.
+\begin{textcode}
+> docker ps -a
+CONTAINER ID  IMAGE               COMMAND               CREATED      STATUS
+5b6964334214  docker-test-memory  "stress --vm 1 --vm-  10 secs ago  Exited (1) 8 secs ago
+\end{textcode}
+
+\textbf{Remarque :} La limite indiquée par le flag \code{--memory} va appliquée à la taille de la RAM et \textbf{du SWAP}\cite{marek_goldmann_res_mgmt}. C'est à dire que si on possède un SWAP et qu'on fixe une limite à 128 MB, alors le container pourra consommer jusqu'à 256 MB de mémoire (128 MB (RAM) + 128 MB (SWAP, soit une fois la mémoire allouée pour la RAM). La cible a été configurée sans SWAP.
+
 
 \subsection{5.11 - Set container CPU priority appropriately}
+On l'a vu, il est possible de limiter les ressources d'un container Docker. Parmi, ces ressources, il y a évidement le processeur.
+
+Il est possible de limiter l'utilisation de processeur de deux manières :
+\begin{enumerate}
+\item En définissant une priorité (\textit{cpu shares}) à un container
+\item En définissant le nombre de cores qu'un container peut utiliser
+\end{enumerate}
+
+Pour simuler une charge processeur, l'image \code{docker-test-memory} va être utilisée comme c'était le cas dans la sous section précédente. En effet, \code{stress} permet de stresser le processeur sur un nombre de core à choix.
+
+Plusieurs cas d'utilisation vont être simuler pour mesure l'effet des limitations imposées. Il y aura donc deux containers. Le premier avec une priorité basse (20\%) appelé \textit{low-prority} et un second, nommé \textit{high-priority}, avec une priorité haute (80\%).
+
+Les cas d'utilisation suivants vont être analysés :
+\begin{enumerate}
+	\item En utilisant tous les cores disponibles
+	\begin{enumerate}
+		\item \textit{low-priority} seul
+		\item \textit{high-priority} seul
+		\item \textit{low-priority} et \textit{high-priority} ensemble
+	\end{enumerate}
+	
+    \item En choisissant le(s) core(s) à utiliser
+	\begin{enumerate}
+		\item \textit{low-priority} seul sur le core 0
+		\item \textit{high-priority} seul sur le core 1
+		\item \textit{low-priority} et \textit{high-priority} ensemble sur le core 0
+    \end{enumerate}
+\end{enumerate}
+
+
+\textbf{Remarque :} la cible utilisée pour ces tests est un \textit{ODROID C1} qui possède 4 cores. Ces tests sont reproductibles sur la cible originale "\odroid" sans soucis mais une autre carte a été choisie pour des questions pratiques. En effet, ma carte \textit{ODROID C1} a été configurée pour être accessible depuis l'extérieur ce qui est bien pratique pour travailler dans le train.
+
+\textbf{Remarque :} Entre chaque cas d'utilisation, on suppose que les containers ont été tuées avec la commande \code{docker kill <container\_id>}.
+
+
+\subsubsection{\textit{CPU shares}}
+On peut définir une priorité à un container en lui donnant un poids relatif/part (\textit{share}). Une part peut varier entre 0 (poids minium $\to$ priorité minimale) et 1024 (poids maximum $\to$ priorité maximale). Par défaut, un container est lancé avec une part égale à 1024. Donc deux containers lancés occuperont le processeur à temps égal.
+
+
+\textbf{Remarque :} On part de l'hypothèse que peu de processus tournent sur la cible au moment de l'exécution des commandes suivantes afin de ne pas perturber les mesures.
+
+\textbf{Cas d'utilisation - \textit{low-priority}, tous les cores disponibles} : 
+\begin{textcode}
+docker run --name=low-priority --cpu-shares=205 -d docker-test-memory --cpu `nproc`
+\end{textcode}
+
+Explication des paramètres :
+\begin{itemize}
+\item \code{--name} : nom du container
+\item \code{--cpu-shares} : nombre de parts, $205 \simeq 204.8 = 1024 \times 0.2$, 0.2 pour 20\%
+\item \code{--cpu} : argument pour \code{stress}, indique le nombre de workers qui vont stresser la machine. Ici, on décide de mettre autant de workers que de cores sur la machine. On recupère ces cores grâce à la commande \code{nproc}.
+\end{itemize}
+
+Mesure de l'activité processeur :
+\begin{bashcode}
+> docker stats low-priority
+low-priority   398.95%   188 KiB/846.6 MiB   0.02%   468 B/468 B
+\end{bashcode}
+
+Comme on peut le constater, l'utilisation des processeurs est de presque... 400\% ! $400 = 4 \times 100  = nombre\ de\ cores \times taux\ d'utilisation$. On voit donc que la cible est utilisée au maximum de ses capacités alors qu'on lui avait demandé de n'utiliser que 20\% (\code{--cpu-shares=205}) de celles-ci. On explique cela par le fait qu'il s'agit d'un poids \textit{relatif} et par conséquent si aucun autre processus (processus hôte ou container docker) n'est lancé, il n'y a aucune raison de ne pas profiter de l'intégralité des ressources.
+
+Preuve si on lance un processus hôte : 
+\begin{bashcode}
+> md5sum /dev/random & # md5sum est monocore
+> docker stats low-priority
+low-priority   296.71%   188 KiB/846.6 MiB   0.02%   594 B/468 B
+\end{bashcode}
+
+\textbf{Cas d'utilisation - \textit{high-priority}, tous les cores disponibles} :
+\begin{bashcode}
+> docker run --name=high-priority --cpu-shares=819 -d docker-test-memory --cpu `nproc`
+> docker stats high-priority
+high-priority   398.78%   196 KiB/846.6 MiB   0.02%  468 B/468 B
+\end{bashcode}
+
+Avec cette fois 80\% ($80 = 1024 \times 0.8$) de parts, on voit que le processeur reste pleinement utilisé pour la même raison évoquée précédemment; si aucun autre processus (gourmand) est lancé, alors on utilise l'intégralité de la charge disponible.
+
+
+\textbf{Cas d'utilisation - \textit{low-priority} et \textit{high-priority} ensemble, tous les cores disponibles} :
+
+Lancement des deux containers :
+\begin{bashcode}
+docker run --name=low-priority  --cpu-shares=205 -d docker-test-memory --cpu `nproc` && \
+docker run --name=high-priority --cpu-shares=819 -d docker-test-memory --cpu `nproc`
+\end{bashcode}
+
+Utilisation du processeur :
+\begin{textcode}
+CONTAINER      CPU %     MEM USAGE/LIMIT     MEM %   NET I/O
+high-priority  319.41%   280 KiB/846.6 MiB   0.03%   768 B/468 B
+low-priority   79.74%    532 KiB/846.6 MiB   0.06%   936 B/468 B
+\end{textcode}
+
+On le voit, \textit{high-priority} occupe 80\% de l'utilisation CPU ($320 = 400 * 0.8$) et \textit{low-priority} occupe 20\% ($80 = 400 * 0.2$).
+
+
+\subsubsection{Limitation du nombre de cores}
 TODO
 
-\subsection{5.12 - Mount container's root filesystem as read only}
-TODO explain only
+\textbf{Cas d'utilisation - \textit{low-priority} seul sur le core 0} :
+
+\begin{textcode}
+docker run --name=low-priority --cpu-shares=205 --cpuset-cpus=0 -d docker-test-memory --cpu `nproc`
+\end{textcode}
+
+Utilisation CPU :
+\begin{textcode}
+> docker stats low-priority
+low-priority   100.73%   356 KiB/846.6 MiB   0.04%   468 B/468 B
+\end{textcode}
+
+On voit que le container tourne sur un seul core (100\% au lieu de 400\%) malgré qu'il y ait toujours 4 workers (car \code{nproc} = 4). De nouveau, la priorité de 20\% est ignorée car il n'y a qu'un seul container qui est exécuté actuellement.
+
+\textbf{Remarque :} On garde ce container exécuté pour le prochain cas d'utilisation.
+
+\textbf{Cas d'utilisation - \textit{high-priority} seul sur le core 1} :
+
+\begin{textcode}
+docker run --name=high-priority --cpu-shares=819 --cpuset-cpus=1 -d docker-test-memory --cpu `nproc`
+\end{textcode}
+
+Utilisation CPU :
+
+\begin{textcode}
+> docker stats low-priority high-priority 
+high-priority   100.14%   272 KiB/846.6 MiB   0.03%   468 B/468 B
+low-priority    100.48%   356 KiB/846.6 MiB   0.04%   1.018 KiB/468 B
+\end{textcode}
+
+Comme on le remarque, \textit{high-priority} se comporte de la même manière \textit{low-priority} car ils sont "isolés" dans leur core respectif qu'ils utilisent pleinement.
+
+\textbf{Remarque :} Ici aussi, on conserve les containers actuellement exécutés pour le dernier cas d'utilisation.
+
+\textbf{Cas d'utilisation - \textit{low-priority} et \textit{high-priority} ensemble sur le core 0} :
+On lance le container \textit{high-priority} sur le core 0 désormais. On le nomme cette fois-ci \textbf{\textit{high-priority-c0}} car il tourne sur le core 0.
+
+\begin{textcode}
+docker run --name=high-priority-c0 --cpu-shares=819 --cpuset-cpus=0 -d docker-test-memory --cpu `nproc`
+\end{textcode}
+
+Utilisation CPU :
+\begin{textcode}
+> docker stats low-priority high-priority high-priority-c0
+high-priority       100.49%             192 KiB/846.6 MiB   0.02%               866 B/468 B
+high-priority-c0    79.25%              192 KiB/846.6 MiB   0.02%               398 B/398 B
+low-priority        20.15%              248 KiB/846.6 MiB   0.03%               1.406 KiB/468 B
+\end{textcode}
+
+\textbf{Remarque :} Il est tout à fait possible d'exécuter un container sur plusieurs cores à la fois. Par exemple. il suffit d'utiliser le flag \code{--cpuset-cpus=\{0,2,3\}} pour lancer le container sur les cores 0, 2 et 3.
 
 
 \subsection{Situation finale}
@@ -1031,8 +1243,6 @@ Les étapes suivantes seront réalisées :
 
 \subsection{Redimensionnement de la partition principale}
 Actuellement, il n'y a qu'une partition sur la cible; la partition principale. Il faut réduire la partition principale et créer une partition dans le nouvel espace libre. Pour ce faire, l'outil GParted\footnote{GParted : \url{http://gparted.org/}} a été utilisé car il permet de voir visuellement ce qui est réalisé.
-
-
 
 \begin{figure}[H]
     \subfloat[Situation initiale - Une seule partition]{%
@@ -1230,6 +1440,14 @@ TODO : parler de la philosophie des containers légers et éphémères, comment 
 \end{landscape}
 \chapter{Proposition d'améliorations vis à vis du travail précédent}
 TODO: Pas prioritaire, a voir si on a le temps ! passer en revue et critique positivement le travail de Bachelor précédent. Dire que ce n'est pas une critique négative mais apporter un avis supplémentaire et plus récent (Docker évoluant beaucoup)
+
+Arrivé en fin de projet, les rapports de M. Bassang ont été relus afin de voir, si avec le recul, il y avait de nouvelles choses à en tirer. Après cette lecture, il a été jugé intéressant de faire une critique positive sur le travail effectué et les recommandations données dans ces rapports. 
+
+Le but ici est d'apporter un avis un peu moins informel, supplémentaire, complémentaire et plus récent sur l'utilisation de Docker en général.
+
+Il faut insister sur le fait qu'il s'agit d'une critique positive qui a pour but d'améliorer le travail effectué. Avoir un feedback sur un projet est toujours bon à prendre.
+
+
 
 
 \chapter{Conclusion}
