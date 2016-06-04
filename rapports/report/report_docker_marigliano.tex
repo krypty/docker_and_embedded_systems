@@ -18,7 +18,6 @@
 \usepackage{lmodern}
 \usepackage{pdflscape}
 \usepackage{subfig}
-\usepackage{color}
 
 % == Header and Footer
 \usepackage{fancyhdr}
@@ -63,9 +62,11 @@
 
 \newminted{text}{xleftmargin=20pt, linenos=true, breaklines=true, frame=single, framesep=6pt, tabsize=2, fontfamily=courier, fontsize=\small}
 
+\newminted{diff}{xleftmargin=20pt, linenos=true, breaklines=true, frame=single, framesep=6pt, tabsize=2, fontfamily=courier, fontsize=\small}
 
 % inline code
 \newcommand{\code}[1]{\texttt{#1}}
+
 
 % == Chapter titles
 % Remove space before title
@@ -719,7 +720,7 @@ On remarque que par défaut, les containers sont lancés en root. Si le containe
 Le dernier cas concerne l'utilisation du user namespace. Ici c'est différent, on mappe un utilisateur standard de la machine hôte à l'utilisateur root du container. Ainsi, on peut effectuer des tâches nécessitant les droits root dans le container. Cependant, si le processus au sein du container vient à s'en échapper, il n'est pas root mais l'utilisateur mappé aux droits limités.
 
 
-\subsection{4.5  - Enable Content trust for Docker}
+\subsection{4.5  - Enable Content trust for Docker}\label{ssc-content-trust}
 \textbf{Rappel :} Un \textit{registry} (Docker Hub par exemple) héberge des \textit{repositories} et un \textit{repository} contient plusieurs images. Chacune de ses images est une "couche" de l'application ou du processus proposé(e) par un utilisateur.
 
 Docker Content Trust\cite{blog_docker_content_trust}\cite{mouat_2005} est une fonctionnalité de Docker arrivée avec la version 1.8 qui permet de vérifier les auteurs des images Docker. Avant qu'un auteur publie une image sur un \textit{registry} distant (par exemple Docker Hub), Docker Engine signe l'image en local avec la clé privée de l'auteur. Quand l'image est rapatriée (\textit{pulled}), Docker Engine compare la clé publique contenue dans le certificat qui accompagne l'image avec la clé publique de l'auteur pour vérifier que l'image téléchargée n'a pas été altérée et est à jour.
@@ -1122,7 +1123,7 @@ Explication des paramètres :
 \begin{itemize}
 \item \code{--name} : nom du container
 \item \code{--cpu-shares} : nombre de parts, $205 \simeq 204.8 = 1024 \times 0.2$, 0.2 pour 20\%
-\item \code{--cpu} : argument pour \code{stress}, indique le nombre de workers qui vont stresser la machine. Ici, on décide de mettre autant de workers que de cores sur la machine. On recupère ces cores grâce à la commande \code{nproc}.
+\item \code{--cpu} : argument pour \code{stress}, indique le nombre de workers qui vont stresser la machine. Ici, on décide de mettre autant de workers que de cores sur la machine. On récupère ces cores grâce à la commande \code{nproc}.
 \end{itemize}
 
 Mesure de l'activité processeur :
@@ -1224,7 +1225,37 @@ low-priority        20.15%              248 KiB/846.6 MiB   0.03%               
 
 
 \subsection{Situation finale}
-TODO
+Après avoir effectuer toutes ces modifications, il est venu le temps de relancer le benchmark afin de les vérifier.
+
+\textbf{Remarque :} On supprime tous les containers avant de continuer avec la commande \code{docker kill low-priority high-priority} et \code{docker rm \$(docker ps -a -q)}
+
+Avant de lancer le benchmark, on va lancer un container \textit{low-priority}avec un maximum de paramètres recommandés.
+
+\begin{textcode}
+docker run --disable-content-trust --name=low-priority --cpu-shares=205 --memory 128M --user nobody --cap-drop=all -d docker-test-memory --cpu `nproc`
+\end{textcode}
+
+Explication des paramètres :
+\begin{itemize}
+\item \code{--disable-content-trust} : désactive Content Trust. Comme on l'a évoqué à la section \ref{ssc-content-trust}, très peu d'images ARM supporte Content Trust à l'heure actuelle. On doit donc explicitement l'ignorer.
+\item \code{--name} : nom du container
+\item \code{--cpu-shares} : nombre de parts, $205 \simeq 204.8 = 1024 \times 0.2$, 0.2 pour 20\%
+\item \code{--memory} : alloue uniquement 128 MB de RAM au container
+\item \code{--user} : utilise l'utilisateur \code{nobody} (droits restreints) pour exécuter le container qui sont suffisants pour exécuter un stress de la machine.
+\item \code{--cap-drop} : désactive tous les permissions du kernel qui sont inutiles pour stresser la machine.
+\item \code{-d} : le container s'exécute en arrière-plan
+\item \code{--cpu} : argument pour \code{stress}, indique le nombre de workers qui vont stresser la machine. Ici, on décide de mettre autant de workers que de cores sur la machine. On récupère ces cores grâce à la commande \code{nproc}.
+\end{itemize}
+
+En exécutant à nouveau le benchmark de sécurité, on observe les différences suivantes. Le résultat complet se trouve à l'appendix \ref{apx-bench-after-modif}. Le fichier \code{vanilla.log} est le résultat du benchmark sans aucune modifications et \code{after-modifications.log} est le résultat après les modifications apportées avec ce chapitre. Git a été utilisé pour afficher les différences entre les deux fichiers. Le flag \code{--no-index} est utilisé car on ne se trouve pas dans un repository git.
+
+\textbf{Rappel :} Lors du premier benchmark, on avait utilisé un container appelé \textit{my\_container}.
+
+\begin{bashcode}
+git diff --no-index -- vanilla.log after-modifications.log
+\end{bashcode}
+
+\inputminted[xleftmargin=20pt, linenos=true, breaklines=true, frame=single, framesep=6pt, tabsize=2, fontfamily=courier, fontsize=\small]{diff}{../../docker_security_benchmark/diff.log}
 
 
 \section{Séparation des données Docker dans une partition chiffrée}\label{partition_chiffree}
@@ -1460,13 +1491,18 @@ TODO... ce qu'on voulait faire, ce qui a été fait, ce qu'il reste à faire/pou
 \bibliography{bibliography}
 
 \begin{appendices}
-\chapter{Installation de Archlinux ARM sur \odroid}\label{install_alarm_odroid}
 
+\chapter{Installation de Archlinux ARM sur \odroid}\label{install_alarm_odroid}
 \textbf{Remarque : }Ce guide requiert l'utilisation d'un ordinateur sous GNU/Linux.
 
 Source : \url{https://archlinuxarm.org/platforms/armv7/samsung/odroid-xu3}
 
 \input{appendices/archlinux_arm_odroid_xu3_install}
+
+
+\chapter{Résultat du benchmark de sécurité après modifications}\label{apx-bench-after-modif}
+
+\inputminted[xleftmargin=20pt, linenos=true, breaklines=true, frame=single, framesep=6pt, tabsize=2, fontfamily=courier, fontsize=\small]{text}{../../docker_security_benchmark/after-modifications.log}
 
 \end{appendices}
 
