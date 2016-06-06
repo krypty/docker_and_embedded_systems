@@ -14,5 +14,9 @@
 0.0.3
  & 11.05.16
  & \listset {\theauthor }
- & Rédaction des sections Situation actuelle, Séparation des données Docker dans une partition chiffrée, Planning \\
+ & Rédaction des sections Situation actuelle, Séparation des données Docker dans une partition\\
+0.0.4
+ & 06.06.16
+ & \listset {\theauthor }
+ & Rédaction de la configuration du système d'exploitation hôte\\
 \end {longtable}

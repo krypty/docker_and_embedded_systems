@@ -84,7 +84,7 @@
 
 \title{Docker and embedded systems}
 \author{Gary \bsc{Marigliano}}
-\newcommand{\version}{0.0.3}
+\newcommand{\version}{0.0.4}
 
 % aliases
 \newcommand{\odroid}{ODROID-XU3 Lite }
@@ -144,13 +144,17 @@ Version \version}
 \begin{versionhistory}
   \vhEntry{0.0.1}{02.05.16}{\theauthor}{Création du document}
   \vhEntry{0.0.2}{05.05.16}{\theauthor}{Ajout des chapitres Matériel utilisé, Présentation de Docker}
-    \vhEntry{0.0.3}{11.05.16}{\theauthor}{Rédaction des sections Situation actuelle, Séparation des données Docker dans une partition chiffrée, Planning }
+  \vhEntry{0.0.3}{11.05.16}{\theauthor}{Rédaction des sections Situation actuelle, Séparation des données Docker dans une partition}
+  \vhEntry{0.0.4}{06.06.16}{\theauthor}{Rédaction de la configuration du système d'exploitation hôte}
 \end{versionhistory}
 
 
 \chapter{Résumé du document}
+Ce document est le rapport de fin de projet de semestre Docker and embedded systems. Un des buts de ce projet est de cross compiler Docker à partir de ses sources pour produire un binaire exécutable sur un \odroid (ARMv7). De plus, une partie concernant la sécurité de Docker est également traitée.
 
-TODO
+Pour parvenir à ces objectifs, le travail a été séparé en deux parties. La première concerne la cross compilation de Docker est a fait l'objet d'un rapport de mi-projet "\oldreportname" disponible en annexe. Ce rapport concerne la deuxième partie à savoir la sécurité avec Docker. 
+
+L'aspect sécurité de Docker a été étudié en couches en s'attaquant d'abord à la configuration du système hôte, puis au développement d'une application \textit{hello world} mettant en pratique cette configuration.
 
 \pagenumbering{gobble}
 \tableofcontents
@@ -286,9 +290,7 @@ L'étude de la sécurité de Docker a donc été séparée avec les couches \tex
 
 \item \nameref{config_systeme_os_hote} : configuration du kernel, configuration des options de lancement de Docker, etc.
 
-\item \nameref{creation_utilisation_images_docker} : bonnes pratiques et contraintes liées au monde de l'embarqué
-
-\item \nameref{utilisation_containers} : options de lancement
+\item \nameref{chp-app-hello-world} : application de démonstration ayant pour objectif de mettre en pratique les recommandations de sécurité évoqués dans les chapitres précédents
 
 \end{itemize}
 
@@ -1423,16 +1425,65 @@ Stocker les données de Docker dans une partition chiffrée est une bonne initia
 \end{itemize}
 
 \section{Conclusion sur la configuration du système d'exploitation hôte}
-TODO dire ce qui s'est passé et ce qui serait bien de faire en plus (project nautilus), GRSecurity, SELinux, AppArmor.
+Le but de ce chapitre était de configurer le système d'exploitation hôte afin d'exécuter Docker et ses containers de la manière la plus sécurisée possible. Pour ce faire, on s'est basé sur un benchmark de sécurité qui liste un certain nombre de recommandations.
+
+Parmi ces recommandations, plusieurs ont été implémentées, d'autres simplement expliquée. A chaque fois, une explication complémentaire et un exemple pratique accompagne la recommandation. C'est une des plus-values apportée par ce rapport.
+
+Certaines recommandations n'ont malheureusement pas pu aboutir pour des causes variées. Malgré ceci, certains mécanismes internes de Docker sont désormais plus clair et il est toujours positif d'en retenir une leçon.
+
+Finalement, une comparaison avant/après a été réalisé afin de voir ce qui a pu être réellement accompli.
+
+Cependant, il reste encore quelques pistes à explorer pour renforcer la sécurité de l'OS et de Docker. On peut citer :
+\begin{itemize}
+\item Docker Security Scanning\footnote{Docker Security Scanning: \url{https://blog.docker.com/2016/05/docker-security-scanning/}} : Outil qui va analyser les repositories privés d'un développeur à la recherche de vulnérabilités connues. C'est un outil d'analyse statique, aucun container n'est lancé.
+\item GRSecurity\footnote{GRSecurity : \url{https://grsecurity.net/}} : Un ensemble de patches pour le kernel qui ont pour objectif de le rendre plus sécurisé. Il existe une version communautaire et une version professionnelle.
+\item SELinux et AppArmor : Ensemble de politiques et profils de sécurité. Ils permettent de définir des accès plus fins grâce à un contrôle d'accès obligatoire (MAC\footnote{Mandatory Access Control: \url{https://en.wikipedia.org/wiki/Mandatory_access_control}}). Demande une longue configuration.
+\item Chiffrement de l'ensemble du système et pas uniquement de la partition contenant les données de Docker.
+\end{itemize}
 
 
-\chapter{Création et utilisation des images Docker}\label{creation_utilisation_images_docker}
+\chapter{Application Hello World}\label{chp-app-hello-world}
+Ce chapitre a pour objectif de montrer le développement d'une application \textit{hello world} utilisant Docker, les principes de sécurité évoqués dans ce document et respectueuse des contraintes liées au monde de l'embarqué. Cette application est plutôt un démonstrateur qu'une application de production. Ainsi, le code métier de l'application développée est basique et n'a pas été pensé pour être particulièrement performant ou efficace. Elle sert de prétexte à la mise en pratique des aspects théoriques décrits dans ce document.
+
+L'application est composée de deux containers :
+\begin{enumerate}
+\item Un container Flask\footnote{Flask - A Python Microframework : \url{http://flask.pocoo.org/}} (application web Python) qui expose une API REST pour gérer une TO-DO list.
+\item Un container MariaDB\footnote{MariaDB : \url{https://mariadb.org/}} (système de gestion de bases de données) qui stocke les données liées à la TO-DO list.
+\end{enumerate}
+
+Aspects à prendre en compte :
+\begin{itemize}
+\item Cette application devra être exécutée sur la cible (ARM)
+\item Elle devra tenir compte des contraintes liées au monde de l'embarqué, voir chapitre \ref{sec-contraintes-monde-embarque}
+\item Elle devra tenir compte des aspects sécurités évoqués dans ce document
+\item Elle devra être suffisamment simple pour ne pas se perdre dans le code métier
+\item Communication entre containers avec Docker Compose. A introduire dans ce chapitre
+\end{itemize}
+
+
+Les sources de cette application sont disponibles à cette adresse : \url{https://github.com/krypty/iot-hello-world}.
+
+TODO: insert container scheme here
+
 TODO : ce chapitre montre comment et pourquoi créer et utiliser des images Docker qui soient sécurisées et adaptées au monde de l'embarqué (taille principalement). Utilisation des hash cryptographiques pour l'OS utilisé et les versions des logiciels installés.
 Montrer un cas pratique avec une image commune basée sur alpine linux dire ce que ça apporte de travailler ainsi et pourquoi il faut le faire.
 
-
-\chapter{Utilisation des containers}\label{utilisation_containers}
 TODO : parler de la philosophie des containers légers et éphémères, comment les exécuter de manière sûre et sécurisée, comment limiter le pouvoir des containers (conso ram, ddos, communication avec le monde extérieur ou entre containers, ...)
+
+\section{Container Flask}
+TODO montrer le code métier, justifier le Dockerfile
+
+\section{Container MariaDB}
+TODO montrer le code métier, justifier le Dockerfile
+
+\section{Communication entre les containers - Docker Compose}
+TODO expliquer Docker Compose dans les grandes lignes + justifier docker-compose.yml
+
+\section{Déploiement}
+TODO git clone + commande de lancement docker (script sh si la commande est trop longue)
+
+\section{Analyse}
+TODO dire ce qu'on a fait et ce qu'on aurait pu (mieux) faire.
 
 \begin{landscape}
 \chapter{Déroulement du projet}
@@ -1454,17 +1505,57 @@ TODO : parler de la philosophie des containers légers et éphémères, comment 
 \end{figure}
 
 \end{landscape}
-\chapter{Proposition d'améliorations vis-à-vis du travail précédent}
-TODO: Pas prioritaire, a voir si on a le temps ! passer en revue et critique positivement le travail de Bachelor précédent. Dire que ce n'est pas une critique négative, mais apporter un avis supplémentaire et plus récent (Docker évoluant beaucoup)
 
+
+\chapter{Proposition d'améliorations vis-à-vis du travail précédent}
 Arrivé en fin de projet, les rapports de M. Bassang ont été relus afin de voir, si avec le recul, il y avait de nouvelles choses à en tirer. Après cette lecture, il a été jugé intéressant de faire une critique positive sur le travail effectué et les recommandations données dans ces rapports. 
 
 Le but ici est d'apporter un avis un peu moins informel, supplémentaire, complémentaire et plus récent sur l'utilisation de Docker en général.
 
 Il faut insister sur le fait qu'il s'agit d'une critique positive qui a pour but d'améliorer le travail effectué. Avoir un feedback sur un projet est toujours bon à prendre.
 
+\textbf{Remarque :} Ce qui suit est également plus personnel, je m'autorise l'emploi d'un ton moins informel pour ce chapitre.
 
+Voici une liste non exhaustive des améliorations possibles que je pourrais apporter (seulement ce qui est en lien avec la sécurité).
 
+\section{Image minimale basée sur Alpine Linux}
+Dans le rapport de M. Bassang, il est question de la construction d'une image minimale basée sur Busybox appelée "Linux léger". Je propose de remplacer cette image par l'utilisation de Alpine Linux qui existe en version ARM (non officielle) et x64 (officielle).
+
+Les avantages sont nombreux :
+
+\begin{itemize}
+\item Sensiblement la même taille $\to$ Pas de coût mémoire supplémentaire.
+
+\item Intègre un gestionnaire de paquets $\to$ Flexible et évolutive. Permet la mise à jour des paquets installés
+
+\item Est mise à jour par la communauté $\to$ Pas besoin de maintenir une image légère à la main
+
+\item Spécification de la version à utiliser $\to$ On peut indiquer la version à utiliser. On sait directement quelle version est utilisée.
+
+\item Plus simple à mettre en place $\to$ Absence de construction manuelle et d'utilisation de divers \textit{hacks} pour faire fonctionner l'image.
+
+\item Est la manière recommandée de procéder\footnote{\url{http://www.lemondeinformatique.fr/actualites/lire-docker-la-bascule-d-ubuntu-vers-alpine-linux-heurte-des-utilisateurs-63874.html}}\footnote{\url{https://news.ycombinator.com/item?id=11000827}} $\to$ A terme l'entreprise Docker souhaiterait que les utilisateurs basculent de Ubuntu/Debian vers Alpine car plus légère et moins couteuse pour l'entreprise (téléchargements plus légers avec Alpine, donc moins de frais pour eux). De plus, un partenariat a été conclu avec les responsables de Alpine Linux
+  
+\end{itemize}
+
+\section{Mise à jour des containers Docker}
+Dans les rapports, on explique comment manipuler le système de fichier hôte (en manipulant les fichiers /var/lib/docker/aufs/\ldots{}) afin de mettre à jour les containers. Ceci n'est pas une bonne idée, à mon avis, car :
+  
+	\begin{itemize}
+	\item Je n'ai pas \emph{l'impression} que ce dossier (/var/lib/docker\ldots{}) soit fait pour cela
+	  
+	\item Un container devrait être immuable selon Docker\footnote{\url{http://fr.slideshare.net/jpetazzo/immutable-infrastructure-with-docker-and-containers-gluecon-2015}}. C'est à dire qu'un container s'exécute et c'est tout ! Pour les mises à jour ou toutes autres modifications de la configuration ou du système de fichier, on recrée un container (avec une configuration modifiée). Comme le dit l'auteur des slides: \textit{"Never upgrade a server again. Never update your code. Instead, create new servers, and throw away the old ones!"}
+	
+	\item En mettant à jour (à chaud ou directement depuis le filesystem hôte), on perd cette notion d'immutabilité. En utilisant des containers immuables, on peut les versionner et donc revenir en arrière sans soucis.
+	
+	\item Un container ne devrait jamais contenir des données métiers (ou de configuration, voire même toutes données que l'on  souhaiterait garder, exemples les logs) mais devrait les partager via un dossier partagé (volume) au moment de l'exécution du container (flag -v pour les dossiers et VOLUME dans un Dockerfile)
+	  
+	\item Suite du point précédent: De cette manière, les containers deviennent immuables et jetables facilitant ainsi mises à jour, sauvegardes et versionning
+	\end{itemize}
+
+Ainsi, je pense que produire une application Docker est plus intéressante à partir d'un Dockerfile qu'à partir d'une suite de \code{docker commit} Voir: \url{https://getcarina.com/docs/best-practices/docker-best-practices-dockerfile/}.
+
+De cette manière, on veut pouvoir revenir en arrière à tout moment. C'est le principe du rollback évoqué dans le rapport. Au chapitre 7.3 de ce dernier, l'élève effectue des rollbacks grâce à la commande \code{docker history}. Je pense que c'est une mauvaise idée et qu'il serait plus simple et pratique de rester dans l'esprit du container jetable. En effet, si l'on construit une image à partir d'un Dockerfile et qu'on versionne ce Dockerfile (et les fichiers qui l'accompagnent) avec git par exemple, il devient est plus pratique à partager (size(Dockerfile + fichiers de l'app) \textless{} size(container)). De plus, on sait exactement ce que contient à l'instant t (ou au tag t) le container rien qu'en lisant le Dockerfile qu'il l'a produit.
 
 \chapter{Conclusion}
 TODO... ce qu'on voulait faire, ce qui a été fait, ce qu'il reste à faire/pourrait faire
