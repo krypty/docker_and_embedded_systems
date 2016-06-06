@@ -82,7 +82,7 @@
 \newcommand{\school}{Haute École d'ingénierie et d'architecture de Fribourg}
 \newcommand{\oldreportname}{État de l’art à la mi-projet de semestre Docker and embedded systems - Ou comment ne pas cross compiler Docker sur ARM}
 
-\title{Projet de semestre Docker and embedded systems}
+\title{Docker and embedded systems}
 \author{Gary \bsc{Marigliano}}
 \newcommand{\version}{0.0.3}
 
@@ -92,67 +92,52 @@
 \begin{document}
 
 \begin{titlepage}
-\begin{center}
-
-\includegraphics[width=0.6\textwidth]{img/docker_logo}\\[1cm]
-
-\begin{figure}[htbp]
-\begin{minipage}[c]{.45\linewidth}
-\begin{flushleft}
-\includegraphics[width=7cm]{img/mse_logo}
-\end{flushleft}
-\end{minipage}
-\hfill
-\begin{minipage}[c]{.45\linewidth}
+\fontfamily{phv}\fontseries{mc}\selectfont
 \begin{flushright}
-\includegraphics[height=2cm]{img/logo_hes-so}
+\begin{minipage}{0.5\textwidth}
+\begin{flushleft}
+\includegraphics[width=0.9\textwidth]{./img/mse_logo}
+\end{flushleft}
+\end{minipage}%
+\begin{minipage}{0.5\textwidth}
+\begin{flushright}
+\includegraphics[width=0.6\textwidth]{./img/logo_hes-so}
 \end{flushright}
 \end{minipage}
-\end{figure}
+\begin{flushleft}
+\footnotesize
+Master of Science HES-SO in Engineering \\
+Av. de Provence 6 \\
+CH-1007 Lausanne
+\end{flushleft}
+~\\[0.5cm]
 
+\Huge Master of Science HES-SO in Engineering\\[0.5cm]
+
+\LARGE Orientation : Technologies de l’information et de la communication (TIC)\\[0.5cm]
+~\\[1cm]
 % Title
-\rule{\linewidth}{0.5mm} \\[0.4cm]
-{ \huge \bfseries \thetitle \\[0.4cm] }
-\rule{\linewidth}{0.5mm} \\[1.5cm]
-
-% Author and supervisor
-\noindent
-\begin{minipage}{0.4\textwidth}
-  \begin{flushleft} \large
-    \emph{Auteur :}\\
-    \theauthor
-  \end{flushleft}
-\end{minipage}%
-\begin{minipage}{0.4\textwidth}
-  \begin{flushright} \large
-    \emph{Encadrant :} \\
-    Jean-Roland \bsc{Schuler}
-  \end{flushright}
-\end{minipage}
-
-\vfill
-
-\noindent
-\begin{minipage}{0.4\textwidth}
-  \begin{flushleft} \large
-    \emph{Contact :}\\
-    gary.marigliano@master.hes-so.ch
-  \end{flushleft}
-\end{minipage}%
-\begin{minipage}{0.4\textwidth}
-  \begin{flushright} \large
-    \emph{Mandant :} \\
-    \school
-  \end{flushright}
-\end{minipage}
-
+{
+\Huge \MakeUppercase{\thetitle} \\[2.5cm]
+}
+{
+\normalsize
+Fait par:\\
+\Huge \theauthor \\[0.5cm]
+}
+{
+\normalsize
+Sous le direction de: \\
+Prof. Jean-Roland \bsc{Schuler} \\
+A la \school
+}
 \vfill
 
 % Bottom of the page
-{\large Version \version \\ \today}
+{\normalsize Lausanne, HES-SO//Master, \today \\
+Version \version}
 
-
-\end{center}
+\end{flushright}
 \end{titlepage}
 
 \pagestyle{historystyle}
