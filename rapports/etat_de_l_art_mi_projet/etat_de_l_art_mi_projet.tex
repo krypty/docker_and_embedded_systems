@@ -162,7 +162,7 @@ Le chapitre \ref{pres-docker} présente Docker afin de pouvoir comprendre les ch
 De manière plus précise, ce projet vise à maîtriser les parties suivantes:
 
 \begin{enumerate}
-  \item Construction d'un système Linux capable de faire tourner Docker et son \emph{daemon} en utilisant Buildroot. Pour générer le dit système, on dispose d'un \emph{repository} Gitlab hébergé à la \school
+  \item Construction d'un système Linux capable de faire tourner Docker et son \emph{daemon} en utilisant Buildroot. Pour générer ledit système, on dispose d'un \emph{repository} Gitlab hébergé à la \school
 
   \item Cross compilation de Docker et de son \emph{daemon}, capable de faire tourner des containers
 \end{enumerate}
@@ -194,7 +194,7 @@ Grossièrement, Buildroot permet d'ajouter des packages et de configurer son sys
 
 \section{Vérifier que le système peut faire tourner Docker}
 
-Il faut en premier lieu mettre la main sur un binaire ARM Docker statiquement lié qui intègre le \emph{daemon}. En effet, à l'heure actuelle, lorsqu'on compile Docker pour ARM de la manière officielle, le binaire résultant n'intègre pas le \emph{daemon} mais uniquement le client (qui permet de se connecter à un \emph{daemon} distant). Voir également à la section \ref{maniere_officielle_limitations}
+Il faut en premier lieu mettre la main sur un binaire ARM Docker statiquement lié qui intègre le \emph{daemon}. En effet, à l'heure actuelle, lorsqu'on compile Docker pour ARM de la manière officielle, le binaire résultant n'intègre pas le \emph{daemon}, mais uniquement le client (qui permet de se connecter à un \emph{daemon} distant). Voir également à la section \ref{maniere_officielle_limitations}
 
 Le seul binaire de ce type trouvé actuellement est téléchargeable ici: \url{https://github.com/umiddelb/armhf/raw/master/bin/docker-1.9.1}\label{binaire_arm}.
 
@@ -205,7 +205,7 @@ chmod +x docker-1.9.1
 ./docker-1.9.1 deamon
 \end{bashcode}
 
-S'il y a des erreurs c'est sûrement qu'il manque un ou plusieurs modules kernel. Pour vérifier que la configuration actuelle du noyau est correcte. On trouve sur le \textit{repository} de Docker un script qui indique quels modules sont manquants.
+S'il y a des erreurs, c'est sûrement qu'il manque un ou plusieurs modules kernel. Pour vérifier que la configuration actuelle du noyau est correcte. On trouve sur le \textit{repository} de Docker un script qui indique quels modules sont manquants.
 
 Ce script est à télécharger ici: \url{https://github.com/docker/docker/blob/master/contrib/check-config.sh}
 
@@ -268,7 +268,7 @@ Optional Features:
 
 La suite consiste à modifier le kernel pour y ajouter les modules manquants, de reflasher le système et tester à nouveau si Docker se lance.
 
-La configuration d'un kernel Linux n'est volontairement pas expliquée, car d'une part cette information se trouve facilement sur Internet ou sur les documents indiqués plus haut et d'une autre car ce n'est pas le but de ce rapport.
+La configuration d'un kernel Linux n'est volontairement pas expliquée, car d'une part cette information se trouve facilement sur Internet ou sur les documents indiqués plus haut et d'une autre, car ce n'est pas le but de ce rapport.
 
 \chapter{Objectif 2 - Techniques de compilation essayées}
 
@@ -292,7 +292,7 @@ binaire ARM Docker qui n'embarque pas le \emph{deamon}.
 
 \subsection{Principe utilisé}
 
-Pour compiler Docker de la manière officiellement supportée, on doit utiliser Docker. En effet, le Makefile fourni va lancer un container Docker qui va contenir un système d'exploitation ainsi que tous les pré-requis et dépendances puis lancer la compilation de Docker à l'intérieur de ce container.
+Pour compiler Docker de la manière officiellement supportée, on doit utiliser Docker. En effet, le Makefile fourni va lancer un container Docker qui va contenir un système d'exploitation ainsi que tous les prérequis et dépendances puis lancer la compilation de Docker à l'intérieur de ce container.
 
 \subsection{Cheminement général}
 
@@ -323,7 +323,7 @@ Comme on peut le voir à la figure \ref{fig_docker_in_docker}, pour compiler Doc
 
 \subsection{Limitations}\label{maniere_officielle_limitations}
 
-Actuellement, il est possible de générer un binaire Docker x64 et ARM mais seule l'architecture x64 intègre le \emph{deamon} nécessaire à la création de containers.
+Actuellement, il est possible de générer un binaire Docker x64 et ARM, mais seule l'architecture x64 intègre le \emph{deamon} nécessaire à la création de containers.
 
 Le binaire ARM est dit \code{CLIENT\_ONLY} dans le sens où il peut être le client d'un \emph{deamon} Docker remote (instancié sur une autre machine).
 
@@ -336,7 +336,7 @@ Même principe que la technique précédente à la différence que le PC Host es
 
 Voir section \ref{maniere_officielle}.
 
-Remarque: dans ce cas, seul \code{make binary} est nécessaire car on n'est pas obligé de cross compiler pour d'autres plateformes.
+Remarque: dans ce cas, seul \code{make binary} est nécessaire, car on n'est pas obligé de cross compiler pour d'autres plateformes.
 
 \subsection{Cheminement général}
 
@@ -354,20 +354,20 @@ Similaire à la section \ref{maniere_officielle}.
 
 \subsection{Limitations}
 
-A l'issue de plusieurs tentatives de compiler Docker en utilisant un Odroid C1 (personnel), il n'a pas été possible de finir une compilation car ces dernières se terminaient en gelant le système au bout d'une heure.
+A l'issue de plusieurs tentatives de compiler Docker en utilisant un Odroid C1 (personnel), il n'a pas été possible de finir une compilation, car ces dernières se terminaient en gelant le système au bout d'une heure.
 
-Évidemment, le temps de compilation est énormément long et on est limité par la machine avec laquelle on compile. Une autre possibilité pour l'avenir serait de passer par un prestataire Cloud qui fournit des machines ARM. Scaleway semble proposer ce genre d'offre\footnote{Scaleway: \url{https://www.scaleway.com/}}
+Évidemment, le temps de compilation est énormément long et on est limité par la machine avec laquelle on compile. Une autre possibilité pour l'avenir serait de passer par un prestataire Cloud qui fournit des machines ARM. Scaleway semble proposer ce genre d'offre\footnote.{Scaleway: \url{https://www.scaleway.com/}}
 
 
 \section{Compiler en émulant une machine ARM sur un PC de bureau avec QEMU et une image Debian}
 
 \subsection{Principe utilisé}
 
-Cette technique (et les suivantes basées sur celle-ci) est différente. Ici, on utilise une machine virtuelle QEMU\footnote{QEMU, émuler une machine complète: \url{http://wiki.qemu.org/Main_Page}} pour compiler Docker. On ne fait donc plus de cross compilation mais de l'émulation. On verra dans au chapitre \ref{executer_containers_arm_sur_x64} que l'on peut utiliser QEMU pour exécuter des containers ARM sur une machine x64.
+Cette technique (et les suivantes basées sur celle-ci) est différente. Ici, on utilise une machine virtuelle QEMU\footnote{QEMU, émuler une machine complète: \url{http://wiki.qemu.org/Main_Page}} pour compiler Docker. On ne fait donc plus de cross compilation, mais de l'émulation. On verra dans au chapitre \ref{executer_containers_arm_sur_x64} que l'on peut utiliser QEMU pour exécuter des containers ARM sur une machine x64.
 
 \subsection{Cheminement général}
 
-Il faut d'abord installer QEMU sur une machine. Ici Archlinux est utilisé mais cela devrait être sensiblement la même chose pour d'autres distributions.
+Il faut d'abord installer QEMU sur une machine. Ici Archlinux est utilisé, mais cela devrait être sensiblement la même chose pour d'autres distributions.
 
 \label{install_qemu_arch}
 \begin{bashcode}
@@ -398,7 +398,7 @@ La principale différence vient du fait qu'on encapsule le processus dans une ma
 
 \subsection{Limitations}
 
-Cette solution n'est pas une solution à suivre. C'est, à mon avis, une bonne idée mais inutilisable comme présenté ici. Par contre, cela peut devenir intéressant avec d'autres distributions qui intègrent un package Docker et dont le kernel est correctement configuré. Par exemple, Raspbian (Une Debian modifiée pour les Raspberry Pi) ou Archlinux ARM. Les solutions suivantes reprennent cette hypothèse\label{hypothese_debian}.
+Cette solution n'est pas une solution à suivre. C'est, à mon avis, une bonne idée, mais inutilisable comme présenté ici. Par contre, cela peut devenir intéressant avec d'autres distributions qui intègrent un package Docker et dont le kernel est correctement configuré. Par exemple, Raspbian (Une Debian modifiée pour les Raspberry Pi) ou Archlinux ARM. Les solutions suivantes reprennent cette hypothèse\label{hypothese_debian}.
 
 
 Autre point négatif, cette solution (et les dérivées utilisant QEMU) nécessite de disposer d'un binaire ARM Docker, celui de la section \ref{binaire_arm}. Par conséquent, comme on ne sait pas comment produire ce binaire, on ne maîtrise pas l'ensemble de la pipeline de compilation.
@@ -408,7 +408,7 @@ Autre point négatif, cette solution (et les dérivées utilisant QEMU) nécessi
 
 \subsection{Principe utilisé}
 
-Même principe que la technique précédente à la différence près que l'image de la VM n'est plus une Debian mais une Raspbian\footnote{Raspbian: \url{https://www.raspbian.org}}, utilisée par les Raspberry Pi.
+Même principe que la technique précédente à la différence près que l'image de la VM n'est plus une Debian, mais une Raspbian\footnote{Raspbian: \url{https://www.raspbian.org}}, utilisée par les Raspberry Pi.
 
 \subsection{Cheminement général}
 
@@ -449,7 +449,7 @@ On va utiliser la commande \code{chroot}\footnote{chroot: \url{https://fr.wikipe
 
 \subsection{Cheminement général}
 
-Le tutoriel utilisé est le suivant: \url{https://github.com/RoEdAl/linux-raspberrypi-wsp/wiki/Building-ArchLinux-ARM-packages-ona-a-PC-using-QEMU-Chroot}. Une copie de ces commandes se trouvent à l'Appendix \ref{archlinux_arm_qemu_chroot}.
+Le tutoriel utilisé est le suivant: \url{https://github.com/RoEdAl/linux-raspberrypi-wsp/wiki/Building-ArchLinux-ARM-packages-ona-a-PC-using-QEMU-Chroot}. Une copie de ces commandes se trouve à l'Appendix \ref{archlinux_arm_qemu_chroot}.
 
 \subsection{Schéma}
 
@@ -470,7 +470,7 @@ En clair, tous les dossiers en dessus de \textit{archlinux\_rpi2} appartiennent 
 
 \subsection{Limitations}
 
-Bien qu'il ait été possible de booter sur la machine virtuelle, la compilation de Docker n'a pas pu être lancée car cette procédure à "détecté" qu'on se trouvait en \code{chroot} et s'est arrêtée.
+Bien qu'il ait été possible de booter sur la machine virtuelle, la compilation de Docker n'a pas pu être lancée, car cette procédure a "détecté" qu'on se trouvait en \code{chroot} et s'est arrêtée.
 
 \section{Compiler Docker sans Docker}
 
@@ -498,7 +498,7 @@ export AUTO_GOPATH=1
 cd docker_tmp
 git checkout v1.10.3 -b gary
 
-# parmis les pré-requis, il manquait btrfs-progs
+# parmis les prérequis, il manquait btrfs-progs
 yaourt btrfs-progs
 
 # on ignore devicemapper, car il y avait des erreurs.
@@ -517,7 +517,7 @@ export DOCKER_BUILDTAGS='exclude_graphdriver_devicemapper'
     \label{fig_docker_without_docker}
 \end{figure}
 
-La figure \ref{fig_docker_without_docker} montre la différence par rapport à la manière officielle. En effet, Docker n'est plus utilisé mais uniquement ses sources.
+La figure \ref{fig_docker_without_docker} montre la différence par rapport à la manière officielle. En effet, Docker n'est plus utilisé, mais uniquement ses sources.
 
 \subsection{Limitations}
 
@@ -525,7 +525,7 @@ Cette technique n'est pas une bonne idée pour les raisons suivantes:
 
 \begin{itemize}
 \item Il faut installer et configurer soi-même les outils de compilations alors qu'avec la manière officielle, c'est automatiquement fait dans un container.
-\item Lors des tests, il n'a été tenté de cross compiler vers ARM. C'est possible mais cela n'a été pas testé.
+\item Lors des tests, il n'a été tenté de cross compiler vers ARM. C'est possible, mais cela n'a été pas testé.
 \item Cette solution n'apporte rien de plus par rapport à la manière officielle. C'est-à-dire qu'elle produit (ou produirait dans le cas d'une cross compilation ARM) le même binaire qu'avec la manière officielle. Donc, le \textit{deamon} ne serait de toute façon pas disponible.
 
 \end{itemize}
@@ -536,9 +536,9 @@ Néanmoins, cette solution a permis de comprendre qu'il fallait peut-être modif
 
 Comme on a pu le voir, plusieurs techniques et tentatives ont été essayées. Aucune n'a permis de  compiler ou de cross compiler Docker pour obtenir un binaire ARM statiquement lié.
 
-Néanmoins, on sait que c'est possible car d'une part des distributions comme Archlinux ARM intègrent un package Docker incluant le \textit{deamon} et d'une autre car on a pu mettre la main sur un binaire isolé, voir section \ref{binaire_arm}.
+Néanmoins, on sait que c'est possible, car d'une part des distributions comme Archlinux ARM intègrent un package Docker incluant le \textit{deamon} et d'une autre, car on a pu mettre la main sur un binaire isolé, voir section \ref{binaire_arm}.
 
-Encore une fois, il n'est pas impossible que Docker supporte officiellement le \textit{deamon} pour la plateforme ARM d'ici quelques temps et ce document sera obsolète.
+Encore une fois, il n'est pas impossible que Docker supporte officiellement le \textit{deamon} pour la plateforme ARM d'ici quelque temps et ce document sera obsolète.
 
 Pour la suite du projet, j'ai installé Archlinux ARM sur l'Odroid XU3 et vais continuer avec une partie concernant la sécurité de Docker et de ces containers.
 
@@ -610,7 +610,7 @@ docker run -d -p 80:80 rpi-busybox-httpd # essayez un autre port s'il est déjà
 Rendez-vous ensuite sur \url{http://localhost:80} pour observer la page web.
 
 \chapter{Conclusion}
-A la fin de la lecture de ce rapport, on se rend compte qu'il n'y a aucune méthode testée qui a permis de (cross-)compiler Docker sur la cible. Néanmoins, ce document montre les techniques utilisées et aidera peut être en cas de reprise de cette partie du projet.
+A la fin de la lecture de ce rapport, on se rend compte qu'il n'y a aucune méthode testée qui a permis de (cross-)compiler Docker sur la cible. Néanmoins, ce document montre les techniques utilisées et aidera peut-être en cas de reprise de cette partie du projet.
 
 Heureusement, tout ceci a permis de mieux comprendre comment Docker était construit et comment il fonctionnait de manière générale. De plus, la génération d'un système depuis zéro a permis d'apprendre beaucoup sur Linux et les systèmes embarqués en général.
 
@@ -631,7 +631,7 @@ La suite du projet s'articulera autour de la sécurité de Docker et de sa confi
   
 \textbf{Source}: \url{https://github.com/RoEdAl/linux-raspberrypi-wsp/wiki/Building-ArchLinux-ARM-packages-ona-a-PC-using-QEMU-Chroot}
 
-On a PC witch ArchLinux or Manjaro installed:
+On a PC with ArchLinux or Manjaro installed:
 
 Build and install binfmt-support package.
 Build and install qemu-user-static package.
