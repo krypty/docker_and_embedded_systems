@@ -84,7 +84,7 @@
 
 \title{Docker and embedded systems}
 \author{Gary \bsc{Marigliano}}
-\newcommand{\version}{0.0.4}
+\newcommand{\version}{0.0.5}
 
 % aliases
 \newcommand{\odroid}{ODROID-XU3 Lite }
@@ -146,15 +146,37 @@ Version \version}
   \vhEntry{0.0.2}{05.05.16}{\theauthor}{Ajout des chapitres Matériel utilisé, Présentation de Docker}
   \vhEntry{0.0.3}{11.05.16}{\theauthor}{Rédaction des sections Situation actuelle, Séparation des données Docker dans une partition}
   \vhEntry{0.0.4}{06.06.16}{\theauthor}{Rédaction de la configuration du système d'exploitation hôte}
+  \vhEntry{0.0.5}{08.06.16}{\theauthor}{Correction et ajout des chapitres Application Hello World et Conclusion}
 \end{versionhistory}
 
 
 \chapter{Résumé du document}
+\section{Contexte}
 Ce document est le rapport de fin de projet de semestre Docker and embedded systems. Un des buts de ce projet est de cross compiler Docker à partir de ses sources pour produire un binaire exécutable sur un \odroid (ARMv7). De plus, une partie concernant la sécurité de Docker est également traitée.
 
-Pour parvenir à ces objectifs, le travail a été séparé en deux parties. La première concerne la cross compilation de Docker est a fait l'objet d'un rapport de mi-projet "\oldreportname" disponible en annexe. Ce rapport concerne la deuxième partie à savoir la sécurité avec Docker. 
+Pour parvenir à ces objectifs, le travail a été séparé en deux parties. La première concerne la cross compilation de Docker qui a fait l'objet d'un rapport de mi-projet "\oldreportname" proposé dans un document séparé. Ce rapport concerne la deuxième partie à savoir la sécurité avec Docker.
 
 L'aspect sécurité de Docker a été étudié en couches en s'attaquant d'abord à la configuration du système hôte, puis au développement d'une application \textit{hello world} mettant en pratique cette configuration.
+
+
+\section{Objectifs du projet}
+\begin{enumerate}
+\item Construire un système Linux minimal capable d'accueillir Docker grâce à Buildroot et Busybox.
+
+\item Cross-compiler Docker pour ARM afin qu'il puisse s'exécuter sur ce système minimal.
+
+\item Étudier la partie sécurité de Docker et développer une application de démonstration mettant en pratique les bonnes pratiques étudiées. Ceci est l'objectif de ce rapport.
+\end{enumerate}
+
+
+\section{Résultats obtenus}
+Pour les deux premiers objectifs, plusieurs solutions ont été tentées mais aucune d'entre elle n'a pas permis de produire un binaire Docker ARM cross-compilé. Concernant le système minimal, plusieurs pistes ont été proposées mais il a été décidé de passer au 3ème objectif, la sécurité, car le temps alloué a été consommé et il faillait commencer la partie sur la sécurité. Tous les détails se trouvent dans le rapport "\oldreportname".
+
+Pour continuer le projet sur la cible (\odroid), il a été choisi d'utiliser Arch Linux ARM, une distribution qui propose dans ses packages Docker. On utilisera donc pas un binaire cross-compilé par nos soins ni un système minimal maison mais Archlinux ARM et le binaire Docker de ce dernier.
+
+Pour le dernier objectif, on a analysé les points chauds et mis en place plusieurs mécanismes améliorant la sécurité. On peut citer la création d'une partition chiffrée pour les données de Docker, la configuration du \textit{daemon} et l'utilisation de bonnes pratiques quant à la création et utilisation de containers Docker.
+
+Enfin, une application \textit{Hello World} dite de démonstration a été développée en respectant le plus possible les recommandations de sécurité évoquées dans ce rapport.
 
 \pagenumbering{gobble}
 \tableofcontents
@@ -168,7 +190,13 @@ L'aspect sécurité de Docker a été étudié en couches en s'attaquant d'abord
 
 Ce document est le rapport de fin de projet de semestre Docker and embedded systems. Un des buts de ce projet est de cross compiler Docker à partir de ses sources pour produire un binaire exécutable sur un \odroid (ARMv7). De plus, une partie concernant la sécurité de Docker est également traitée.
 
-Lien: \url{https://github.com/krypty/docker_and_embedded_systems}
+Aux adresses suivantes, on retrouve les rapports, le journal de travail ainsi que l'application \textit{Hello World}. Littéralement tout ce qui a été produit se trouve à ces deux adresses :
+
+\begin{enumerate}
+\item \url{https://github.com/krypty/docker_and_embedded_systems}
+\item \url{https://github.com/krypty/iot-hello-world}
+\end{enumerate}
+
 
 Ce projet de semestre s'inscrit dans une certaine continuité avec les projets de semestre et de bachelor de M. Loic Bassang \cite{bassang_bachelor}. Plusieurs pistes intéressantes avaient en effet été mentionnées dans ces projets-là notamment une partie concernant la sécurité et Docker. Ainsi, ce rapport fera parfois des parallèles avec ces documents.
 
@@ -188,6 +216,8 @@ De manière plus précise, ce projet vise à maitriser les parties suivantes:
 \end{enumerate}
 
 Les deux premiers points ont été traités dans un précédent rapport appelé "\oldreportname" qu'il est recommandé de lire.
+
+Étant donné, l'impossibilité de produire un système maison et de cross compiler Docker sur la cible, il a été décidé d'utiliser Arch Linux ARM qui intègre Docker dans ses packages pour poursuivre le projet.
 
 Ce document se concentre, dès lors, sur le dernier point ainsi que sur le déroulement global du projet.
 
@@ -231,7 +261,7 @@ Initialement, il était prévu de générer un système d'exploitation minimal q
 
 Ainsi, il a été décidé, de la même manière que pour le travail de bachelor précédent, d'utiliser une distribution GNU/Linux proposant Docker dans ses packages. Le choix s'est donc porté sur \textbf{Archlinux ARM} \footnote{Arch Linux ARM : \url{https://archlinuxarm.org/}}.
 
-Sur la page wiki de la distribution (\url{https://archlinuxarm.org/platforms/armv7/samsung/odroid-xu3}), on peut suivre un guide de génération de la carte SD qui contient le système d'exploitation. Une copie de ce guide est disponible à l'appendice \ref{install_alarm_odroid}.
+Sur la page wiki de la distribution (\url{https://archlinuxarm.org/platforms/armv7/samsung/odroid-xu3}), on peut suivre un guide de génération de la carte SD qui contient le système d'exploitation. Une copie de ce guide est disponible à l'appendice \ref{install_alarm_odroid}. Sur la carte SD, il a une partition unique.
 
 
 \section{Installation de Docker}
@@ -239,12 +269,14 @@ Une fois le système installé et démarré, il convient d'installer Docker depu
 
 Ceci peut être accompli avec les commandes suivantes :
 
+\textbf{Remarque :} \code{pacman} est le gestionnaire de paquets Arch Linux.
+
 \begin{bashcode}
-pacman -Syyu
+pacman -Syyu # mise à jour des dépôts et des packages installés
 reboot
-pacman -S docker
-systemctl enable docker
-systemctl start docker
+pacman -S docker # installation de Docker
+systemctl enable docker # démarrage du service au boot
+systemctl start docker # démarrage du service maintenant
 docker version
 \end{bashcode}
 
@@ -350,14 +382,14 @@ On obtient la sortie suivante :
 Comme on peut le voir, il y a plusieurs points qui sont en \textit{WARN}. Pour la suite du document, plusieurs de ces points vont être analysés et mitigés.
 
 
-\subsection{1.1  - Create a separate partition for containers}
+\subsection{"1.1  - Create a separate partition for containers"}
 On recommande pour ce point de créer une partition séparée pour les containers. Ce point est traité à la section \ref{partition_chiffree}. Dans cette section, une étape supplémentaire est proposée; la partition est chiffrée.
 
 
-\subsection{2.1  - Restrict network traffic between containers}
+\subsection{"2.1  - Restrict network traffic between containers"}
 Par défaut, le trafic réseau est autorisé entre containers du même hôte. On devrait désactiver ce comportement par défaut et explicitement autoriser une communication entre containers grâce au "linking".
 
-Pour remédier à ceci, il faut lancer le \textit{daemon} Docker avec cette option: \code{docker daemon --icc=false}
+Pour remédier à ceci, il faut lancer le \textit{daemon} Docker avec cette option: \code{docker daemon --icc=false}. Cette information a été trouvée ici : \url{https://docs.docker.com/engine/userguide/networking/default_network/container-communication/}.
 
 À faire sur la cible:
 
@@ -380,8 +412,8 @@ sudo systemctl restart docker # relance le service docker
 
 Résultat du benchmark après cette modification: \code{[PASS] 2.1 - Restrict network traffic between containers}.
 
-\subsection{2.5 - Do not use the aufs storage driver}
-Pour stocker les images et les différentes couches qui les composent, Docker utilise un driver de stockage\cite{understanding_image_container_driver_storage}, \cite{docker_select_a_driver}, \cite{jpetazzoni_device_driver}. Un driver de stockage (\textit{driver storage}) est l'implémentation d'une abstraction de services liés à la gestion des couches des images et de la couche inscriptible (\textit{writable}) des containers. L'utilisation d'un driver ou d'un autre est transparent pour l'utilisateur. Cependant, une certaine implémentation, aufs, est réputée peu stable et peut causer des crashes au niveau du kernel, voir \cite{cis_benchmark} page 45. Ce driver est donc à remplacer par un autre driver de stockage comme devicemapper par exemple.
+\subsection{"2.5 - Do not use the aufs storage driver"}
+Pour stocker les images et les différentes couches qui les composent, Docker utilise un driver de stockage\cite{understanding_image_container_driver_storage}, \cite{docker_select_a_driver}, \cite{jpetazzoni_device_driver}. Un driver de stockage (\textit{driver storage}) est l'implémentation d'une abstraction de services liés à la gestion des couches des images et de la couche inscriptible (\textit{writable}) des containers. Docker a besoin d'un driver de stockage pour gérer les différentes couches d'un container. L'utilisation d'un driver ou d'un autre est transparent pour l'utilisateur. Cependant, une certaine implémentation, aufs, est réputée peu stable et peut causer des crashes au niveau du kernel, voir \cite{cis_benchmark} page 45. Ce driver est donc à remplacer par un autre driver de stockage comme devicemapper par exemple.
 
 Inconvénient: aufs est le seul driver de stockage qui permet aux containers de partager la mémoire des librairies partagées. Cela peut être utile si la cible fait tourner des milliers de containers utilisant les mêmes programmes ou librairies \cite{cis_benchmark}.
 
@@ -428,24 +460,18 @@ Ajouter l'option \code{--storage-driver=devicemapper} à l'instruction ExecStart
 ExecStart=/usr/bin/docker daemon -H fd:// --icc=false --storage-driver=devicemapper
 \end{bashcode}
 
+Comme dit précédemment, \code{devicemapper} est un choix parmi d'autres. Voici un article qui liste les \textit{driver storages} compatible avec Docker : \url{https://docs.docker.com/engine/userguide/storagedriver/selectadriver/}.
+
 \begin{bashcode}
 sudo systemctl daemon-reload # recharge la configuration des services
 sudo systemctl restart docker # relance le service docker
 \end{bashcode}
 
 
-\subsection{2.8 - Enable user namespace support}
+\subsection{"2.8 - Enable user namespace support"}
 Les namespaces permettent d'isoler certaines fonctionnalités d'un système d'exploitation utilisant Linux. Comme chroot permet aux processus de voir comme racine un dossier isolé du système et non pas la "vraie" racine, les namespaces isolent certains aspects du système comme les processus, les interfaces réseaux, les points de montage, etc.
 
-Jusqu'à très récemment (docker < 1.10.0), Docker supportait les namespaces suivants:
-\begin{itemize}
-\item PID namespace, chaque conteneur a ses propres id de processus
-\item UTS namespace, pour avoir son propre hostname
-\item IPC namespace, qui permet d'isoler les Communications Inter-Processus
-\item Network namespace, chaque conteneur peut avoir sa propre interface réseau, son IP, ses règles de filtrage
-\end{itemize}
-
-Pour plus de détails, voir section \ref{pres-docker-isolation}.
+Pour plus de détails, voir section \ref{sc-namespaces}.
 
 Il y a peu de temps, Docker ajouté le support d'un nouveau namespace\cite{docker_1_10_user_namespace}: user namespace. Celui-ci permet à un processus d'avoir les droits root au sein d'un namespace, mais pas en dehors. Avant, Docker lançait les containers en root ce qui pouvait poser des problèmes de sécurité si un processus dans le container venait à en sortir; il se retrouverait root sur le système hôte. Avec la prise en charge de ce namespace, un container Docker a l'impression d'être root alors qu'il n'est, en réalité, qu'un utilisateur normal sur le système hôte.
 
@@ -460,7 +486,7 @@ Et ajouter l'option \code{--userns-remap=default} au démarrage du \textit{daemo
 Malheureusement, il a été impossible de démarrer le \textit{daemon} avec cette option que ce soit sur la cible (Archlinux, kernel 3.10.96), sur un portable Archlinux (kernel 4.5.4) ou sur un autre portable Xubuntu 16.04 (kernel 4.4.0). Le \textit{daemon} refusait de démarrer ou se bloquait. Il semblerait que cela ne soit pas un cas isolé. En effet plusieurs issues (\#20751, \#21130\footnote{Docker issues : \url{https://github.com/docker/docker/issues}}) ont été ouvertes sur le \textit{repository} Github de Docker.
 
 
-\subsection{2.11 - Use authorization plugin}
+\subsection{"2.11 - Use authorization plugin"}
 Le modèle de permission Docker par défaut est tout ou rien. Tout utilisateur qui a accès au \textit{daemon} Docker peut effectuer n'importe quelles opérations sur tous les containers. Dans le cas où l'on a besoin d'un contrôle plus fin, il est possible de créer des plug-ins d'autorisation (\textit{authorization plugins}) et les ajouter à la configuration du \textit{daemon} Docker. Il est, par exemple, possible de définir que l'utilisateur Bob ne puisse pas arrêter les containers, mais uniquement les lister.
 
 Un plug-in d'autorisation approuve ou refuse les requêtes du client (un utilisateur)  vers le \textit{daemon} en se basant sur le contexte actuel d'authentification et le contexte de commande. Le contexte d'authentification contient tous les détails de l'utilisateur et de la méthode d'authentification et le contexte de commande contient toutes les données utiles à la requête de l'utilisateur.
@@ -500,7 +526,7 @@ La création et mise en place de plug-in n'est pas présentée dans ce rapport. 
 Par conséquent, on décide de ne pas mettre en place ce mécanisme. On rappelle que ce benchmark a surtout pour but de montrer un ensemble de bonnes pratiques et de rendre attentif à certains aspects de la sécurité avec Docker. Il n'est néanmoins pas toujours indispensable d'appliquer toutes les mesures de sécurité si on n’en exprime pas le besoin.
 
 
-\subsection{2.12 - Configure centralized and remote logging}
+\subsection{"2.12 - Configure centralized and remote logging"}
 Docker supporte plusieurs \textit{log drivers} (manière de journaliser). Par défaut, les logs des containers sont produits dans des fichiers JSON sur la machine hôte. Mais il est recommandé de centraliser les logs sur une machine distante pour voir et traiter les logs globalement.
 
 Le benchmark CIS recommande d'externaliser les logs en optant pour le log driver \textit{syslog}. \textit{Syslog}\cite{developpez_syslog}\cite{wiki_syslog} est un protocole définissant un service de journaux d'évènements d'un système informatique. Son but est de transporter par réseau les messages de journalisation générés par une application (dans ce cas Docker) vers un serveur hébergeant un serveur \textit{Syslog}. Le but étant de regrouper tous les journaux au même endroit.
@@ -555,8 +581,8 @@ ExecStart=/usr/bin/docker daemon -H fd:// --icc=false --storage-driver=devicemap
 L'exemple présenté est sommaire, mais il montre le principe général. Dans un cas plus pratique, par exemple un ensemble de cibles qui transmettent la température ambiante à un serveur (ou autre application IoT), on configurerait les cibles pour émettre leurs logs sur un serveur distant. Ce serveur disposerait ensuite d'une interface web affichant l'ensemble des logs des cibles et il serait ainsi possible de suivre le fonctionnement de toutes les cibles. De plus, dans un cas pratique, il faudrait aussi veiller à regarder le contenu de l'image rsyslog téléchargée et vérifier qu'elle fasse bien uniquement ce qu'on lui demande et rien de plus ou alors créer une image rsyslog de toutes pièces.
 
 
-\subsection{2.13 - Disable operations on legacy registry (v1)}
-Un \textit{registry} est un service responsable de l'hébergement et de la distribution d'images Docker. C'est une sorte d'App Store pour image Docker. Le \textit{registry} par défaut est Docker Hub\footnote{Docker Hub : \url{http://hub.docker.com/}}. Il est également possible d'utiliser son propre \textit{registry}. Dans tous les cas, il est recommandé de ne plus utiliser la version 1 de l'API de communication avec les \textit{registries}, car la version 2 permet notamment le transfert sécurisé de données en utilisant TLS\cite{blog_docker_registry_v2}.
+\subsection{"2.13 - Disable operations on legacy registry (v1)"}
+Un \textit{registry} est un service responsable de l'hébergement et de la distribution d'images Docker. C'est une sorte d'App Store pour images Docker. Le \textit{registry} par défaut est Docker Hub\footnote{Docker Hub : \url{http://hub.docker.com/}}. Il est également possible d'utiliser son propre \textit{registry}. Dans tous les cas, il est recommandé de ne plus utiliser la version 1 de l'API de communication avec les \textit{registries}, car la version 2 permet notamment le transfert sécurisé de données en utilisant TLS\cite{blog_docker_registry_v2}.
 
 Pour forcer Docker a n'utiliser que des \textit{registries} v2, il suffit d'ajouter l'option \code{--disable-legacy-registry} au démarrage du \textit{daemon} Docker.
 
@@ -566,7 +592,7 @@ Pour forcer Docker a n'utiliser que des \textit{registries} v2, il suffit d'ajou
 sudo vim /usr/lib/systemd/system/docker.service
 \end{bashcode}
 
-Ajouter l'option icc=false à l'instruction ExecStart. Le résultat devrait ressembler à ceci:
+Ajouter l'option \code{--disable-legacy-registry} à l'instruction ExecStart. Le résultat devrait ressembler à ceci:
 
 \begin{bashcode}
 ExecStart=/usr/bin/docker daemon -H fd:// --icc=false --storage-driver=devicemapper --disable-legacy-registry
@@ -582,7 +608,7 @@ sudo systemctl restart docker # relance le service docker
 Résultat du benchmark après cette modification: \code{[PASS] 2.13 - Disable operations on legacy registry (v1)}.
 
 
-\subsection{4.1  - Create a user for the container}
+\subsection{"4.1  - Create a user for the container"}
 Par défaut, lorsqu'on lance un container, l'utilisateur à l'intérieur de ce container est root. Pour des raisons évidentes de sécurité, root n'est pas toujours l'utilisateur le plus adapté quand on lance un container. De plus, si par une quelconque raison, on arrive à sortir du container, on se retrouve root sur la machine hôte !
 
 Pour mitiger ces effets, il est possible de :
@@ -615,6 +641,7 @@ Pour l'exemple qui suit, on va créer une image qui utilise Alpine Linux comme b
 
 \begin{bashcode}
 mkdir alpine-user
+cd alpine-user
 vim Dockerfile
 \end{bashcode}
 
@@ -637,6 +664,7 @@ CMD ["/bin/sh"]
 On utilise donc l'image de base d'Alpine sur laquelle on effectue des tâches administratives nécessitant root. Une fois ces tâches effectuées, il n'est plus nécessaire d'être root. On crée alors un utilisateur à droit limité appelé toto. C'est cet utilisateur qui sera utilisé par défaut au lancement d'un container utilisant cette image.
 
 \begin{textcode}
+docker build -t alpine-user .
 docker run -it alpine-user
 / whoami
 toto
@@ -669,7 +697,7 @@ root
 
 Le container est lancé en root. On peut écrire à la racine sans souci.
 
-\textbf{Utilisateur root} :
+\textbf{Utilisateur nobody} :
 \begin{textcode}
 > \$ docker run --user nobody -it alpine-user
 ~ \$ whoami
@@ -707,7 +735,7 @@ On remarque que par défaut, les containers sont lancés en root. Si le containe
 Le dernier cas concerne l'utilisation du user namespace. Ici c'est différent, on mappe un utilisateur standard de la machine hôte à l'utilisateur root du container. Ainsi, on peut effectuer des tâches nécessitant les droits root dans le container. Cependant, si le processus au sein du container vient à s'en échapper, il n'est pas root mais l'utilisateur mappé aux droits limités.
 
 
-\subsection{4.5  - Enable Content trust for Docker}\label{ssc-content-trust}
+\subsection{"4.5  - Enable Content trust for Docker"}\label{ssc-content-trust}
 \textbf{Rappel :} Un \textit{registry} (Docker Hub par exemple) héberge des \textit{repositories} et un \textit{repository} contient plusieurs images. Chacune de ses images est une "couche" de l'application ou du processus proposé(e) par un utilisateur.
 
 Docker Content Trust\cite{blog_docker_content_trust}\cite{mouat_2005} est une fonctionnalité de Docker arrivée avec la version 1.8 qui permet de vérifier les auteurs des images Docker. Avant qu'un auteur publie une image sur un \textit{registry} distant (par exemple Docker Hub), Docker Engine signe l'image en local avec la clé privée de l'auteur. Quand l'image est rapatriée (\textit{pulled}), Docker Engine compare la clé publique contenue dans le certificat qui accompagne l'image avec la clé publique de l'auteur pour vérifier que l'image téléchargée n'a pas été altérée et est à jour.
@@ -767,7 +795,7 @@ DOCKER_CONTENT_TRUST=1
 Après avoir redémarré, on relance le benchmark et on obtient la sortie suivante : \code{[PASS] 4.5  - Enable Content trust for Docker}
 
 \subsubsection{Utilisation dans la pratique}
-Désormais, tous les \code{docker pull} que l'on fait exige que les images téléchargées soient signées. 
+Désormais, tous les \code{docker pull} que l'on fait exige que les images téléchargées soient signées.
 
 Il existe donc 3 cas :
 \begin{enumerate}
@@ -797,8 +825,8 @@ Pour quand même télécharger cette image, on peut utiliser le flag \code{--dis
 > docker pull --disable-content-trust armv7/armhf-debian
 Using default tag: latest
 latest: Pulling from armv7/armhf-debian
-cc738ad9b216: Pull complete 
-a3ed95caeb02: Pull complete 
+cc738ad9b216: Pull complete
+a3ed95caeb02: Pull complete
 Digest: sha256:7c04a67927a012551a19d359f745480ae77afed229eb1ab0eac403b45fbf5f37
 Status: Downloaded newer image for armv7/armhf-debian:latest
 \end{textcode}
@@ -813,7 +841,7 @@ See 'docker run --help'.
 
 \begin{textcode}
 > docker run --disable-content-trust -it armv7/armhf-debian
-root@28f7dca7a5f5:/# 
+root@28f7dca7a5f5:/#
 \end{textcode}
 
 \textbf{3. Image signée}
@@ -824,10 +852,10 @@ Dans la pratique on se rend compte qu'il n'y a pas encore beaucoup d'images comp
 Using default tag: latest
 Pull (1 of 1): ubuntu:latest@sha256:1bea66e185d[...]
 sha256:1bea66e185d[...]: Pulling from library/ubuntu
-203137e8afd5: Pull complete 
-2ff1bbbe9310: Pull complete 
-933ae2486129: Pull complete 
-a3ed95caeb02: Pull complete 
+203137e8afd5: Pull complete
+2ff1bbbe9310: Pull complete
+933ae2486129: Pull complete
+a3ed95caeb02: Pull complete
 Digest: sha256:1bea66e185d[...]
 Status: Downloaded newer image for ubuntu@sha256:1bea66e185d[...]
 Tagging ubuntu@sha256:1bea66e185d[...] as ubuntu:latest
@@ -838,7 +866,7 @@ Heureusement, il existe un moyen de garantir que l'intégrité de l'image même 
 \begin{textcode}
 > docker pull armhf/alpine@sha256:9f7b4923[...]
 sha256:9f7b4923[...]: Pulling from armhf/alpine
-06da76670c3f: Pull complete 
+06da76670c3f: Pull complete
 Digest: sha256:9f7b4923[...]
 Status: Downloaded newer image for armhf/alpine@sha256:9f7b4923[...]
 \end{textcode}
@@ -864,7 +892,7 @@ armv7/armhf-ubuntu  latest  sha256:43b1[...]   7 months ago   130.5 MB
 armv7/armhf-debian  latest  sha256:8d68[...]   8 months ago   104.9 MB
 \end{textcode}
 
-\subsection{5.3  - Restrict Linux Kernel Capabilities within containers}\label{ss-restrict-kernel-capa}
+\subsection{"5.3  - Restrict Linux Kernel Capabilities within containers"}\label{ss-restrict-kernel-capa}
 Les containers sont lancés avec des permissions (\textit{kernel capabilities}) par défaut. Ces permissions permettent d'effectuer des opérations qui demandent les droits root. Par exemple. la permission \code{net\_bind\_service} permet à un container de \textit{binder} un port privilégié (ports inférieurs à 1024). Il est possible et recommandé de ne donner que les permissions qui sont strictement nécessaires à l'exécution du container. L'idée ici étant de ne donner aux containers qu'une partie des droits root, voire carrément aucun.
 
 Il est par exemple inutile pour la plupart des containers d'avoir la permission \code{SYS\_MODULE} qui permet charger et de décharger des modules kernel.
@@ -923,14 +951,14 @@ chroot: can't change root directory to '.': Operation not permitted
 
 Idéalement, il faudrait retirer toutes les permissions pour un container et n'ajouter que celles qui sont requises pour le bon fonctionnement du container. Pour ce faire, on peut utiliser l'argument \code{--cap-drop=all} pour retirer toutes les permissions et on utilise ensuite l'argument \code{--cap-add=\{"permission1", "permission2, "permissionN"\}} pour ajouter les permissions requises.
 
-\subsection{5.4  - Do not use privileged containers}
+\subsection{"5.4  - Do not use privileged containers"}
 Le flag \code{--privileged} accorde toutes les permissions kernel à un container. Il ne faut pas utiliser ce flag, mais il faut plutôt ajouter uniquement les permissions requises. Voir sous-section \ref{ss-restrict-kernel-capa}.
 
-\subsection{5.6  - Do not run ssh within containers}
+\subsection{"5.6  - Do not run ssh within containers"}
 Pour communiquer avec les containers depuis l'extérieur, on serait tenté de démarrer un \textit{daemon} ssh à l'intérieur de ceux-ci. Mais ceci comporte plusieurs inconvénients :
 
 \begin{itemize}
-\item Si on a plusieurs containers et que chacun d'eux démarre un \textit{daemon} ssh, il faut s'assurer qu'ils soient à jour. Si on faille de ssh est découverte, il faut mettre à jour et reconstruire tous les containers.
+\item Si on a plusieurs containers et que chacun d'eux démarre un \textit{daemon} ssh, il faut s'assurer qu'ils soient à jour. Si une faille de ssh est découverte, il faut mettre à jour et reconstruire tous les containers.
 \item Il faut gérer les accès et politiques de sécurité pour chaque serveur ssh
 \item Il faut gérer le stockage des clés et des mots de passe pour chaque serveur ssh
 \end{itemize}
@@ -938,7 +966,7 @@ Pour communiquer avec les containers depuis l'extérieur, on serait tenté de d�
 Il est plus sûr de n'avoir qu'un serveur ssh sur la machine hôte et d'ensuite pouvoir exécuter des commandes sur le container voulu. Pour ce faire on utilise la commande \code{docker exec} :
 
 \begin{textcode}
-docker exec <container_id> <command> 
+docker exec <container_id> <command>
 \end{textcode}
 
 Les principales raisons pour lesquelles on voudrait se connecter en ssh sur un container sont les suivantes :
@@ -949,29 +977,32 @@ Les principales raisons pour lesquelles on voudrait se connecter en ssh sur un c
 \item Redémarrage d'un service
 \end{itemize}
 
-Les 3 premiers points peuvent être résolus en utilisant des volumes. Un volume est un dossier stocké sur la machine hôte qui est monté dans un dossier du container. Grâce à ce mécanisme, il est possible de persister des données générées par un container, mais aussi de pouvoir partager ce volume et les données qu'il contient avec d'autres containers.
+Les 3 premiers points peuvent être résolus en utilisant des volumes. Un volume est un dossier stocké sur la machine hôte qui est monté dans un dossier du container. Ce n'est pas une partition que l'on monte sur le container mais plutôt un genre de lien symbolique. Grâce à ce mécanisme, il est possible de persister des données générées par un container, mais aussi de pouvoir partager ce volume et les données qu'il contient avec d'autres containers.
 
 Dans l'exemple qui suit, on veut sauver les logs de deux containers. Pour ce faire, on va utiliser un volume qu'on appelle \textit{logs}. Ce volume est utilisé par les deux containers pour stocker les logs qu'ils produisent.
 
 \begin{figure}[H]
 \centering
-\includegraphics[scale=0.2]{img/docker-volume-1.png}
+\includegraphics[scale=0.3]{img/docker-volume-1.png}
 \caption{Deux containers et un volume \textit{logs}}
 \end{figure}
 
 Démarrage des deux containers (effectuer ce qui suit deux fois) et génération d'un faux log afin de montrer comment il est possible de récupérer ces logs.:
-\begin{textcode}
+
+\textbf{Remarque :} Les lignes commençant par \code{[alarm@alarm]} sont des commandes exécutées sur l'hôte et les lignes commençant par \code{/ \#} (à savoir la ligne 4) sont des commandes exécutées depuis le container.
+
+\begin{bashcode}
 [alarm@alarm ~] > mkdir -p logs/XXX
-[alarm@alarm ~] > docker run -v `pwd`/logs/XXX:/var/log -it armhf/alpine /bin/sh
+[alarm@alarm ~] > docker run --volume `pwd`/logs/XXX:/var/log -it armhf/alpine /bin/sh
 
 / # echo "Error from container XXX..." > /var/log/error_`date +"%Y-%m-%d"`.log
 
 [alarm@alarm ~]> cd logs/XXX/
 [alarm@alarm XXX]> ls
 error_2016-05-29.log
-[alarm@alarm XXX]> cat error_2016-05-29.log 
+[alarm@alarm XXX]> cat error_2016-05-29.log
 Error from container XXX...
-\end{textcode}
+\end{bashcode}
 
 \textbf{Remarque :} XXX est à remplacer par A et B, le nom des deux containers.
 
@@ -979,7 +1010,7 @@ Ce volume peut être ensuite accédé en lecture seule par un container de log q
 
 \begin{figure}[H]
 \centering
-\includegraphics[scale=0.25]{img/docker-volume-2.png}
+\includegraphics[scale=0.35]{img/docker-volume-2.png}
 \caption{Centralisation des logs et sauvegarde de ceux-ci}
 \end{figure}
 
@@ -990,7 +1021,7 @@ docker exec -it <container-id> /bin/sh
 
 \textbf{Remarque : } Le terminal sera lancé avec le même utilisateur que celui précisé au lancement du container. Cet utilisateur n'a peut-être pas les droits de gérer les services (ce qui serait légitime). Dans ce cas, on peut toujours envoyer des signaux avec la commande \code{docker kill -s <signal>} ou se connecter au socket démarré par le service pour lui demander de redémarrer. Les détails de cette technique sont expliqués ici : \url{https://blog.docker.com/2014/06/why-you-dont-need-to-run-sshd-in-docker/}. L'autre idée est de concevoir son container de manière à pouvoir le détruire et en recréer un autre sans que cela gêne le fonctionnement général. En théorie, cette solution est tout à fait viable, car les containers Docker sont conçus pour être isolés et indépendants. À partir du moment où les données ne sont pas stockées uniquement dans le container, il ne devrait pas y avoir de problèmes.
 
-\subsection{5.10 - Limit memory usage for container}
+\subsection{"5.10 - Limit memory usage for container"}
 Il est possible et recommandé de limiter les ressources offertes à un container. Ces ressources peuvent être entre autres la mémoire vive ou l'utilisation CPU (voir section sous section suivante).
 
 Limiter les ressources peut être une nécessité afin d'éviter un débordement d'un container. Si celui-ci se met à consommer toutes les ressources, car il est victime d'une attaque (déni de service par exemple) ou d'un bug, le système risque de se geler et l'on devra être obligé de le redémarrer. Ceci est d'autant plus problématique si d'autres containers étaient lancés. En limitant les ressources d'un container, celui-ci pourrait dysfonctionner sans gêner les autres processus (ou containers) de la machine hôte.
@@ -1059,7 +1090,7 @@ CONTAINER ID  IMAGE               COMMAND               CREATED      STATUS
 \textbf{Remarque :} La limite indiquée par le flag \code{--memory} va appliquée à la taille de la RAM et \textbf{du SWAP}\cite{marek_goldmann_res_mgmt}. C'est-à-dire que si on possède un SWAP et qu'on fixe une limite à 128 MB, alors le container pourra consommer jusqu'à 256 MB de mémoire (128 MB (RAM) + 128 MB (SWAP, soit une fois la mémoire allouée pour la RAM). La cible a été configurée sans SWAP.
 
 
-\subsection{5.11 - Set container CPU priority appropriately}
+\subsection{"5.11 - Set container CPU priority appropriately"}
 On l'a vu, il est possible de limiter les ressources d'un container Docker. Parmi, ces ressources, il y a évidement le processeur.
 
 Il est possible de limiter l'utilisation de processeur de deux manières :
@@ -1070,7 +1101,7 @@ Il est possible de limiter l'utilisation de processeur de deux manières :
 
 Pour simuler une charge processeur, l'image \code{docker-test-memory} va être utilisée comme c'était le cas dans la sous-section précédente. En effet, \code{stress} permet de stresser le processeur sur un nombre de core à choix.
 
-Plusieurs cas d'utilisation vont être simuler pour mesure l'effet des limitations imposées. Il y aura donc deux containers. Le premier avec une priorité basse (20\%) appelé \textit{low-prority} et un second, nommé \textit{high-priority}, avec une priorité haute (80\%).
+Plusieurs cas d'utilisation vont être simulés pour mesurer l'effet des limitations imposées. Il y aura donc deux containers. Le premier avec une priorité basse (20\%) appelé \textit{low-prority} et un second, nommé \textit{high-priority}, avec une priorité haute (80\%).
 
 Les cas d'utilisation suivants vont être analysés :
 \begin{enumerate}
@@ -1080,7 +1111,7 @@ Les cas d'utilisation suivants vont être analysés :
 		\item \textit{high-priority} seul
 		\item \textit{low-priority} et \textit{high-priority} ensemble
 	\end{enumerate}
-	
+
     \item En choisissant le(s) core(s) à utiliser
 	\begin{enumerate}
 		\item \textit{low-priority} seul sur le core 0
@@ -1101,7 +1132,7 @@ On peut définir une priorité à un container en lui donnant un poids relatif/p
 
 \textbf{Remarque :} On part de l'hypothèse que peu de processus tournent sur la cible au moment de l'exécution des commandes suivantes afin de ne pas perturber les mesures.
 
-\textbf{Cas d'utilisation - \textit{low-priority}, tous les cores disponibles} : 
+\textbf{Cas d'utilisation - \textit{low-priority}, tous les cores disponibles} :
 \begin{textcode}
 docker run --name=low-priority --cpu-shares=205 -d docker-test-memory --cpu `nproc`
 \end{textcode}
@@ -1121,7 +1152,7 @@ low-priority   398.95%   188 KiB/846.6 MiB   0.02%   468 B/468 B
 
 Comme on peut le constater, l'utilisation des processeurs est de presque... 400\% ! $400 = 4 \times 100  = nombre\ de\ cores \times taux\ d'utilisation$. On voit donc que la cible est utilisée au maximum de ses capacités alors qu'on lui avait demandé de n'utiliser que 20\% (\code{--cpu-shares=205}) de celles-ci. On explique cela par le fait qu'il s'agit d'un poids \textit{relatif} et par conséquent si aucun autre processus (processus hôte ou container docker) n'est lancé, il n'y a aucune raison de ne pas profiter de l'intégralité des ressources.
 
-Preuve si on lance un processus hôte : 
+Preuve si on lance un processus hôte :
 \begin{bashcode}
 > md5sum /dev/random & # md5sum est monocore
 > docker stats low-priority
@@ -1184,7 +1215,7 @@ docker run --name=high-priority --cpu-shares=819 --cpuset-cpus=1 -d docker-test-
 Utilisation CPU :
 
 \begin{textcode}
-> docker stats low-priority high-priority 
+> docker stats low-priority high-priority
 high-priority   100.14%   272 KiB/846.6 MiB   0.03%   468 B/468 B
 low-priority    100.48%   356 KiB/846.6 MiB   0.04%   1.018 KiB/468 B
 \end{textcode}
@@ -1258,6 +1289,14 @@ Les étapes suivantes seront réalisées :
 \item Binding des données de Docker sur la partition chiffrée
 \item Analyse de la solution proposée
 \end{enumerate}
+
+Voici une image qui montre le changement effectué :
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.6]{img/luks/partitions_evolution}
+\caption{Évolution du partitionnement de la carte SD}
+\end{figure}
+
 
 \subsection{Redimensionnement de la partition principale}
 Actuellement, il n'y a qu'une partition sur la cible; la partition principale. Il faut réduire la partition principale et créer une partition dans le nouvel espace libre. Pour ce faire, l'outil GParted\footnote{GParted : \url{http://gparted.org/}} a été utilisé, car il permet de voir visuellement ce qui est réalisé.
@@ -1508,7 +1547,7 @@ TODO dire ce qu'on a fait et ce qu'on aurait pu (mieux) faire.
 
 
 \chapter{Proposition d'améliorations vis-à-vis du travail précédent}
-Arrivé en fin de projet, les rapports de M. Bassang ont été relus afin de voir, si avec le recul, il y avait de nouvelles choses à en tirer. Après cette lecture, il a été jugé intéressant de faire une critique positive sur le travail effectué et les recommandations données dans ces rapports. 
+Arrivé en fin de projet, les rapports de M. Bassang ont été relus afin de voir, si avec le recul, il y avait de nouvelles choses à en tirer. Après cette lecture, il a été jugé intéressant de faire une critique positive sur le travail effectué et les recommandations données dans ces rapports.
 
 Le but ici est d'apporter un avis un peu moins informel, supplémentaire, complémentaire et plus récent sur l'utilisation de Docker en général.
 
@@ -1535,21 +1574,21 @@ Les avantages sont nombreux :
 \item Plus simple à mettre en place $\to$ Absence de construction manuelle et d'utilisation de divers \textit{hacks} pour faire fonctionner l'image.
 
 \item Est la manière recommandée de procéder\footnote{\url{http://www.lemondeinformatique.fr/actualites/lire-docker-la-bascule-d-ubuntu-vers-alpine-linux-heurte-des-utilisateurs-63874.html}}\footnote{\url{https://news.ycombinator.com/item?id=11000827}} $\to$ A terme l'entreprise Docker souhaiterait que les utilisateurs basculent de Ubuntu/Debian vers Alpine car plus légère et moins couteuse pour l'entreprise (téléchargements plus légers avec Alpine, donc moins de frais pour eux). De plus, un partenariat a été conclu avec les responsables de Alpine Linux
-  
+
 \end{itemize}
 
 \section{Mise à jour des containers Docker}
 Dans les rapports, on explique comment manipuler le système de fichier hôte (en manipulant les fichiers /var/lib/docker/aufs/\ldots{}) afin de mettre à jour les containers. Ceci n'est pas une bonne idée, à mon avis, car :
-  
+
 	\begin{itemize}
 	\item Je n'ai pas \emph{l'impression} que ce dossier (/var/lib/docker\ldots{}) soit fait pour cela
-	  
+
 	\item Un container devrait être immuable selon Docker\footnote{\url{http://fr.slideshare.net/jpetazzo/immutable-infrastructure-with-docker-and-containers-gluecon-2015}}. C'est à dire qu'un container s'exécute et c'est tout ! Pour les mises à jour ou toutes autres modifications de la configuration ou du système de fichier, on recrée un container (avec une configuration modifiée). Comme le dit l'auteur des slides: \textit{"Never upgrade a server again. Never update your code. Instead, create new servers, and throw away the old ones!"}
-	
+
 	\item En mettant à jour (à chaud ou directement depuis le filesystem hôte), on perd cette notion d'immutabilité. En utilisant des containers immuables, on peut les versionner et donc revenir en arrière sans soucis.
-	
+
 	\item Un container ne devrait jamais contenir des données métiers (ou de configuration, voire même toutes données que l'on  souhaiterait garder, exemples les logs) mais devrait les partager via un dossier partagé (volume) au moment de l'exécution du container (flag -v pour les dossiers et VOLUME dans un Dockerfile)
-	  
+
 	\item Suite du point précédent: De cette manière, les containers deviennent immuables et jetables facilitant ainsi mises à jour, sauvegardes et versionning
 	\end{itemize}
 

@@ -19,4 +19,8 @@
  & 06.06.16
  & \listset {\theauthor }
  & Rédaction de la configuration du système d'exploitation hôte\\
+0.0.5
+ & 08.06.16
+ & \listset {\theauthor }
+ & Correction et ajout des chapitres Application Hello World et Conclusion\\
 \end {longtable}

@@ -23,12 +23,12 @@ Voici les différences majeures qu'il existe entre les containers et les machine
 \begin{figure}[hbtp]
 \centering
 \includegraphics[scale=0.5]{img/containers_vs_vm.png}
-\caption{Containers vs machines virtuelles}
+\caption{Machines virtuelles vs Containers}
 \end{figure}
 
 Les machines virtuelles possèdent leur propre OS qui embarque ses propres binaires et librairies. Ceci engendre une perte d'espace disque importante surtout si les binaires ou libraires sont communes à plusieurs machines virtuelles. De plus, démarrer une machine virtuelle prend du temps (jusqu'à plusieurs minutes). En outre, les machines virtuelles doivent installer leurs propres drivers afin de communiquer avec l'hyperviseur (logiciel s'exécutant à l'intérieur d'un OS hôte qui gère les machines virtuelles). Un avantage cependant est l'isolation complète d'une machine virtuelle qui ne peut communiquer avec les autres par défaut.
 
-Les containers s'exécutent de manière isolée par dessus l'OS hôte qui partage ses ressources (kernel, binaires, librairies, périphériques...). Plus légers, les containers démarrent en quelques secondes seulement. Sur une machine, il est tout à fait possible de lancer de milliers de containers similaires, car l'empreinte mémoire est réduite et l'espace disque occupé est partagé si les containers sont semblables. Ceci est expliqué plus en détail à la section \ref{pres-docker-systeme-fichiers-couches}. Les containers sont isolés, mais ils peuvent aussi communiquer entre eux si on leur a explicitement donné l'autorisation.
+Les containers s'exécutent de manière isolée par dessus l'OS hôte qui partage ses ressources (kernel, binaires, librairies, périphériques...). Plus légers, les containers démarrent en quelques secondes seulement. Sur une machine, il est tout à fait possible de lancer des milliers de containers similaires, car l'empreinte mémoire est réduite et l'espace disque occupé est partagé si les containers sont semblables. Ceci est expliqué plus en détail à la section \ref{pres-docker-systeme-fichiers-couches}. Les containers sont isolés, mais ils peuvent aussi communiquer entre eux si on leur a explicitement donné l'autorisation.
 
 Si le lecteur désire connaître plus de détails concernant la virtualisation, il est conseillé de lire le chapitre 3.2 du rapport "\bassangPrjSemestre" de M. Loic Bassang \cite{bassang_semestre} qui amène une bonne introduction aux différents types de virtualisation.
 
@@ -69,7 +69,7 @@ Une fois l'image construite, on peut exécuter l'application dans un container. 
 
 
 \section{Système de fichiers en couche}\label{pres-docker-systeme-fichiers-couches}
-Chaque image Docker est composée d'une liste de couches (\textit{layers}) superposées en lecture seule\cite{understanding_image_container_driver_storage}. Chaque couche représente la différence du système de fichiers par rapport à la couche précédente. Sur la figure \ref{docker-image-layers}, on peut voir 4 couches (identifiables avec des ID) et leur taille respective.
+Chaque image Docker est composée d'une liste de couches (\textit{layers}) superposées en lecture seule\cite{understanding_image_container_driver_storage}. Chaque couche représente la différence du système de fichiers par rapport à la couche précédente. Sur la figure \ref{docker-image-layers}, on peut voir 4 couches (identifiables une chaîne de caractères unique, par exemple \code{91e54dfb1179}) et leur taille respective.
 
 \begin{figure}[hbtp]
 \centering
@@ -91,7 +91,7 @@ Un mot supplémentaire sur une nouvelle caractéristique arrivée avec Docker 1.
 
 Les différences principales entre un UUID et un hash sont :
 \begin{itemize}
-\item Un UUID est généré aléatoirement, donc deux images exactement identiques auront un UUID différent alors qu'en utilisant un hash, le résultat sera identique
+\item Un UUID est généré aléatoirement, donc deux images exactement identiques auront deux UUID différents alors qu'en utilisant un hash, le résultat sera identique
 \item Avec les UUID, même si la probabilité est rare\footnote{Probabilité de doublon : \url{https://en.wikipedia.org/wiki/Universally_unique_identifier\#Random_UUID_probability_of_duplicates}}, il est possible de générer deux fois le même UUID ce qui peut poser des problèmes lors de la construction des images
 \item Une image téléchargée chez une personne A aura un UUID différent que la même image téléchargée chez une personne B. Impossible de s'assurer de l'intégrité de l'image téléchargée en se basant sur l'UUID. En utilisant le hash, on s'assure du même résultat si l'image est identique
 \end{itemize}
@@ -119,7 +119,7 @@ D'autres explications plus détaillées sur le système de fichiers en couches o
 \section{Isolation}\label{pres-docker-isolation}
 Docker met en avant le fait que ses containers soient isolés du système hôte. Pour ce faire, Docker utilise des mécanismes fournis par le kernel. On peut citer parmi ces mécanismes les \textit{namespaces} et \textit{cgroups}.
 
-\subsection{Les namespaces}
+\subsection{Les namespaces}\label{sc-namespaces}
 Les namespaces permettent d'isoler certaines fonctionnalités d'un système d'exploitation utilisant Linux. Comme chroot permet aux processus de voir comme racine un dossier isolé du système et non pas la "vraie" racine, les namespaces isolent certains aspects du système comme les processus, les interfaces réseaux, les points de montage, etc.
 
 Jusqu'à très récemment (docker < 1.10.0), Docker supportait les namespaces suivants\cite{docker_1_10_user_namespace}:
