@@ -1,7 +1,7 @@
 % inspired from: https://github.com/SnipyJulmy/hesso-latextemplate-lab
 \documentclass[11pt,a4paper,oneside]{report}
 \usepackage[margin=2cm]{geometry}
-\usepackage[utf8]{inputenc}
+\usepackage[utf8x]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[french]{babel}
 \usepackage{minted}
@@ -51,7 +51,7 @@
 }
 
 \usepackage[hyphens]{url} % line wrap urls
-\usepackage{hyperref}
+\usepackage[hidelinks]{hyperref}
 
 % == Version history
 \usepackage{vhistory}
@@ -386,7 +386,7 @@ Comme on peut le voir, il y a plusieurs points qui sont en \textit{WARN}. Pour l
 On recommande pour ce point de créer une partition séparée pour les containers. Ce point est traité à la section \ref{partition_chiffree}. Dans cette section, une étape supplémentaire est proposée; la partition est chiffrée.
 
 
-\subsection{"2.1  - Restrict network traffic between containers"}
+\subsection{"2.1  - Restrict network traffic between containers"}\label{ssc-restrict-network-traffic-containers}
 Par défaut, le trafic réseau est autorisé entre containers du même hôte. On devrait désactiver ce comportement par défaut et explicitement autoriser une communication entre containers grâce au "linking".
 
 Pour remédier à ceci, il faut lancer le \textit{daemon} Docker avec cette option: \code{docker daemon --icc=false}. Cette information a été trouvée ici : \url{https://docs.docker.com/engine/userguide/networking/default_network/container-communication/}.
@@ -608,7 +608,7 @@ sudo systemctl restart docker # relance le service docker
 Résultat du benchmark après cette modification: \code{[PASS] 2.13 - Disable operations on legacy registry (v1)}.
 
 
-\subsection{"4.1  - Create a user for the container"}
+\subsection{"4.1  - Create a user for the container"}\label{sc-create-user-for-container}
 Par défaut, lorsqu'on lance un container, l'utilisateur à l'intérieur de ce container est root. Pour des raisons évidentes de sécurité, root n'est pas toujours l'utilisateur le plus adapté quand on lance un container. De plus, si par une quelconque raison, on arrive à sortir du container, on se retrouve root sur la machine hôte !
 
 Pour mitiger ces effets, il est possible de :
@@ -1021,7 +1021,7 @@ docker exec -it <container-id> /bin/sh
 
 \textbf{Remarque : } Le terminal sera lancé avec le même utilisateur que celui précisé au lancement du container. Cet utilisateur n'a peut-être pas les droits de gérer les services (ce qui serait légitime). Dans ce cas, on peut toujours envoyer des signaux avec la commande \code{docker kill -s <signal>} ou se connecter au socket démarré par le service pour lui demander de redémarrer. Les détails de cette technique sont expliqués ici : \url{https://blog.docker.com/2014/06/why-you-dont-need-to-run-sshd-in-docker/}. L'autre idée est de concevoir son container de manière à pouvoir le détruire et en recréer un autre sans que cela gêne le fonctionnement général. En théorie, cette solution est tout à fait viable, car les containers Docker sont conçus pour être isolés et indépendants. À partir du moment où les données ne sont pas stockées uniquement dans le container, il ne devrait pas y avoir de problèmes.
 
-\subsection{"5.10 - Limit memory usage for container"}
+\subsection{"5.10 - Limit memory usage for container"}\label{limit_memory_usage}
 Il est possible et recommandé de limiter les ressources offertes à un container. Ces ressources peuvent être entre autres la mémoire vive ou l'utilisation CPU (voir section sous section suivante).
 
 Limiter les ressources peut être une nécessité afin d'éviter un débordement d'un container. Si celui-ci se met à consommer toutes les ressources, car il est victime d'une attaque (déni de service par exemple) ou d'un bug, le système risque de se geler et l'on devra être obligé de le redémarrer. Ceci est d'autant plus problématique si d'autres containers étaient lancés. En limitant les ressources d'un container, celui-ci pourrait dysfonctionner sans gêner les autres processus (ou containers) de la machine hôte.
@@ -1487,7 +1487,7 @@ Ce chapitre a pour objectif de montrer le développement d'une application \text
 L'application est composée de deux containers :
 \begin{enumerate}
 \item Un container Flask\footnote{Flask - A Python Microframework : \url{http://flask.pocoo.org/}} (application web Python) qui expose une API REST pour gérer une TO-DO list.
-\item Un container MariaDB\footnote{MariaDB : \url{https://mariadb.org/}} (système de gestion de bases de données) qui stocke les données liées à la TO-DO list.
+\item Un container MariaDB/MySQL\footnote{MariaDB : \url{https://mariadb.org/}} (système de gestion de bases de données) qui stocke les données liées à la TO-DO list.
 \end{enumerate}
 
 Aspects à prendre en compte :
@@ -1499,30 +1499,328 @@ Aspects à prendre en compte :
 \item Communication entre containers avec Docker Compose. A introduire dans ce chapitre
 \end{itemize}
 
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.6]{img/docker_hello_world_app.png}
+\caption{Structure des containers pour Hello World}
+\end{figure}
 
-Les sources de cette application sont disponibles à cette adresse : \url{https://github.com/krypty/iot-hello-world}.
 
-TODO: insert container scheme here
+Les fonctionnalités de cette application sont les suivantes :
+\begin{itemize}
+\item Opérations de lecture, écriture, mise à jour et suppression de tâches.
+\item Ces opérations sont accessibles via un service REST JSON. Cette partie est réalisée en Python avec le microframework Flask qui permet de rapidement développer des API REST.
+\item Les données (la todo list) sont stockées dans une base de données MySQL/MariaDB.
+\item La base de données est persistée sur la machine hôte grâce à l'utilisation d'un volume. Mais la gestion des données est effectuée par le container MySQL/MariaDB.
+\end{itemize}
 
-TODO : ce chapitre montre comment et pourquoi créer et utiliser des images Docker qui soient sécurisées et adaptées au monde de l'embarqué (taille principalement). Utilisation des hash cryptographiques pour l'OS utilisé et les versions des logiciels installés.
-Montrer un cas pratique avec une image commune basée sur alpine linux dire ce que ça apporte de travailler ainsi et pourquoi il faut le faire.
 
-TODO : parler de la philosophie des containers légers et éphémères, comment les exécuter de manière sûre et sécurisée, comment limiter le pouvoir des containers (conso ram, ddos, communication avec le monde extérieur ou entre containers, ...)
+\newpage
+\section{Récupération de l'application}
+Il faut d'abord récupérer l'application sur Github.
 
-\section{Container Flask}
-TODO montrer le code métier, justifier le Dockerfile
+A faire sur la cible :
+\begin{bashcode}
+pacman -S git # installation de git si pas présent sur la cible
+git clone https://github.com/krypty/iot-hello-world.git
+cd iot-hello-world
+\end{bashcode}
+
+La structure des fichiers est la suivante :
+\begin{textcode}
+db_config_skeleton.env
+mariadb
+    build.sh
+    clear_db.sh
+    Dockerfile
+    scripts
+        create_db.sh
+        startup.sh
+    start.sh
+flask
+    build.sh
+    Dockerfile
+    src
+        main.py
+    start.sh
+README.md
+\end{textcode}
+
+On retrouve donc les deux containers rangés dans des dossiers séparés, \textit{mariadb} et \textit{flask}. Pour les deux containers, on va analyser leur Dockerfile et les scripts liés à la création des containers. On ne va pas regarder le code de l'application à proprement parlé car ce n'est pas le but de ce chapitre. Cependant, le code du container Flask (\code{main.py}) est disponible en annexe à l'appendice \ref{apx-code-flask}.
+
 
 \section{Container MariaDB}
-TODO montrer le code métier, justifier le Dockerfile
+Voici les fichiers qui vont être analysés : \code{Dockerfile}, \code{create\_db.sh} et \code{startup.sh}. Ils permettent de construire le container.
 
-\section{Communication entre les containers - Docker Compose}
-TODO expliquer Docker Compose dans les grandes lignes + justifier docker-compose.yml
+\textbf{Dockerfile}
+\begin{bashcode}
+FROM armhf/alpine@sha256:9f7b4923ee5e7c4ca0529431266876a70703412beee
+4cf72b93428393418b3bc
 
-\section{Déploiement}
-TODO git clone + commande de lancement docker (script sh si la commande est trop longue)
+MAINTAINER Gary Marigliano <gary.marigliano@master.hes-so.ch>
+
+EXPOSE 3306
+
+RUN apk update && apk upgrade && apk add \
+  mysql \
+  mysql-client \
+  && rm -rf /tmp/* \
+  && rm -rf /var/cache/apk/*
+
+VOLUME ["/var/lib/mysql"]
+
+ADD scripts/* /scripts/
+RUN chmod 700 /scripts/startup.sh && \
+    chmod 700 /scripts/create_db.sh
+
+CMD ["/scripts/startup.sh"]
+\end{bashcode}
+
+Ligne 1 : Indique l'image de départ. Ici, on a choisit une image basée sur Alpine Linux qui est une distribution ultra légère (moins de 10 MB) idéale pour les containers Docker. Elle dispose d'un gestionnaire de paquets (\code{apk}) ce qui permet d'ajouter simplement des applications ou des librairies pour accompagner l'application développée.
+
+Un hash est spécifié (@sha256:XXX) ce qui permet de s'assurer de l'intégrité de l'image téléchargée (on est sûr de toujours télécharger la même image au bit près) et permet de figer la distribution à une version fonctionnelle connue. On évite dès lors de télécharger une nouvelle version de la distribution qui ne serait plus compatible avec notre application dans le futur.
+
+Ligne 6 : On expose le port MySQL 3306 pour permettre d'utiliser éventuellement le serveur MySQL du container à l'extérieur (comprendre sur la machine hôte). La commande \code{EXPOSE} indique que ce container utilise le port 3306 mais tant qu'on ne le mappe pas sur la machine hôte avec le flag \code{docker run -p 3306:3306}, la machine hôte ne peut pas y accéder. Dans le cas de cette application, on a pas besoin de mapper ce port sur la machine hôte car ce container va communiquer avec un autre container (Flask) et dans ce cas, un \textit{link} est suffisant (voir \ref{sc-communication-entre-containers}).
+
+Ligne 8 : On ajoute les packages nécessaires à MySQL et on supprime directement les fichiers temporaires téléchargés. On fait ceci avec une seule commande \code{RUN} car chaque commande crée une nouvelle couche. La taille d'une image Docker est déterminée par la taille de sa couche la plus lourde. Donc, supprimer les fichiers temporaires n'aurait aucun effet, car ces derniers auraient été enregistrés dans la couche précédente. En faisant la suppression sur la même ligne, on évite la sauvegarde de ces fichiers sur une couche.
+
+Ligne 14 : On indique que le chemin \code{/var/lib/mysql} peut être mappé par un volume lors que ce container est instancié. Ici, on monte ce volume car il contient toutes les données de MySQL et comme un container, une fois détruit, ne conserve pas les données qu'il a produit, il faut persister les bases de données MySQL entre chaque lancement de containers. Au lancement du container, on utilisera donc le flag \code{docker run --volume=/chemin/hote:/chemin/container}.
+
+Lignes 16,17 et 20 : On copie dans le container les scripts de configuration de MySQL et d'initialisation de la base de données. Le détail de ces scripts est expliqué juste après.
+
+
+\textbf{startup.sh}
+\begin{bashcode}
+#!/bin/ash
+if [[ `ls /var/lib/mysql | wc -l`  == "0" ]]; then
+  mysql_install_db --user=mysql
+  mysqld_safe --datadir="/var/lib/mysql" &
+  sleep 15s
+  mysqladmin -u root password $MYSQL_ROOT_PASSWORD
+
+  # create database with default tasks
+  ash /scripts/create_db.sh
+
+  killall mysqld
+
+  sleep 10s
+fi
+mysqld_safe --datadir="/var/lib/mysql"
+\end{bashcode}
+%$ $$ $
+
+
+Ce fichier montre l'installation de MySQL a proprement parlé. Concernant Docker, il n'apporte pas grand chose mais on peut noter la présence de variables (\$XXX) pour les informations sensibles comme les mots de passe. On justifie l'utilisation de ces variables à la section \ref{sc-lancement}.
+
+\textbf{create\_db.sh}
+\begin{bashcode}
+#/bin/ash
+
+# Create db user
+mysql -uroot -p$MYSQL_ROOT_PASSWORD -e "CREATE USER '$MYSQL_USERNAME'@'localhost' IDENTIFIED BY '$MYSQL_PASSWORD';"
+mysql -uroot -p$MYSQL_ROOT_PASSWORD -e "GRANT ALL PRIVILEGES ON *.* TO '$MYSQL_USERNAME'@'localhost' WITH GRANT OPTION;"
+mysql -uroot -p$MYSQL_ROOT_PASSWORD -e "CREATE USER '$MYSQL_USERNAME'@'%' IDENTIFIED BY '$MYSQL_PASSWORD';"
+mysql -uroot -p$MYSQL_ROOT_PASSWORD -e "GRANT ALL PRIVILEGES ON *.* TO '$MYSQL_USERNAME'@'%' WITH GRANT OPTION;"
+
+# Create db
+mysql -uroot -p$MYSQL_ROOT_PASSWORD -e "CREATE DATABASE $MYSQL_DB COLLATE 'utf8_general_ci';"
+mysql -uroot -p$MYSQL_ROOT_PASSWORD -e "CREATE TABLE $MYSQL_DB.$TASKS_TABLE (
+  id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  title varchar(50) NOT NULL,
+  description varchar(255) NOT NULL,
+  done tinyint(1) NOT NULL
+) COMMENT='' ENGINE='InnoDB';"
+
+# Fill db with default entries
+mysql -uroot -p$MYSQL_ROOT_PASSWORD -e "INSERT INTO $MYSQL_DB.$TASKS_TABLE (title, description, done) VALUES ('My first task', 'This is my first task', '0');"
+
+mysql -uroot -p$MYSQL_ROOT_PASSWORD -e "INSERT INTO $MYSQL_DB.$TASKS_TABLE (title, description, done) VALUES ('My second task', 'This is my second task', '1');"
+\end{bashcode}
+% $ $$ $
+
+Ce script permet la création de la base de données et des tables pour l'application \textit{Hello World}. Il s'agit d'un code métier et par conséquent, il n'y a rien de particulièrement intéressant concernant Docker. Il n'est présent que pour apporter un contexte pour la suite.
+
+\section{Container Flask}
+L'image est composée de deux fichiers, le \code{Dockerfile} et le code \code{main.py}, l'application elle-même. Le code est disponible en annexe à l'appendice \ref{apx-code-flask} et ne sera pas traité ici car cela n'apporte rien pour Docker.
+
+\textbf{Dockerfile}
+\begin{bashcode}
+FROM armhf/alpine@sha256:9f7b4923ee5e7c4ca0529431266876a70703412beee
+4cf72b93428393418b3bc
+
+MAINTAINER Gary Marigliano <gary.marigliano@master.hes-so.ch>
+
+EXPOSE 5000
+
+RUN apk update && apk upgrade && apk add \
+  python \
+  py-mysqldb \
+  mysql-client \
+  mysql-dev \
+  py-pip \
+  && rm -rf /tmp/* \
+  && rm -rf /var/cache/apk/*
+
+RUN pip --no-cache-dir install flask MySQL-python
+
+ENV APP_NAME iot-hello-world
+
+CMD mkdir ${APP_NAME}
+
+WORKDIR ${APP_NAME}
+
+# Use an unprivileged user called nobody
+USER nobody
+
+ADD src app/
+
+CMD ["python", "app/main.py"]
+\end{bashcode}
+
+Ligne 1 : On réutilise la même image $ \to $ Gain de temps à la construction de l'image car l'image déjà téléchargée et pas plus d'espace disque occupé.
+
+Ligne 2 : Flask tourne sur le port 5000. Il faut donc exposer ce port et le mapper pour pouvoir rendre le service REST accessible depuis l'extérieur (comprendre depuis la machine hôte, voire Internet).
+
+Lignes 7-17 : Installation des packages nécessaires à Flask. On doit installer des paquets en lien avec MySQL car Python (et particulièrement la librairie MySQL-Python) en a besoin pour effectuer des requêtes sur un serveur MySQL. Malheureusement, on est obligé d'installer le package \code{mysql-dev} qui est lourd uniquement pour une librairie qui n'est pas présente sous la forme d'un package à part entière sur Alpine Linux. La librairie en question est  \code{libmysqlclient-dev}\cite{bug_mysql_alpine}.
+
+Lignes 19, 21 et 23 : On se déplace (\code{cd}) dans un dossier APP\_NAME qui est une variable qu'on a définie au sein du Dockerfile. On copiera les fichiers de l'application dans ce dossier plutôt qu'à la racine.
+
+Ligne 26 : On utilise un utilisation à droits limités comme il avait été recommandé de faire à la section \ref{sc-create-user-for-container} afin de limiter les dégâts au sein du container.
+
+Lignes 28 et 30 : On copie l'application et on l'exécute.
+
+\section{Lancement}\label{sc-lancement}
+Les images expliquées, il est temps de les lancer ! Mais avant ceci, il faut encore aborder le sujet de la configuration de MySQL et plus précisément les identifiants (noms d'utilisateur, mots de passe et nom de la base de données...). En effet, ces informations doivent être renseignées lors de la configuration du serveur MySQL et pour la connexion à la base de données depuis le serveur REST Flask.
+
+Naïvement, on serait tenté de "hard-coder" ces informations directement dans les scripts et codes sources mais c'est une mauvaise idée car :
+\begin{itemize}
+\item En cas de changement de ces identifiants, il faut les mettre à jour dans tous les scripts et ne pas oublier un seul endroit !
+\item Si l'application est versionnée sur un \textit{repository} Git ou autre, il serait dommage de rendre public les mots de passe de l'application.
+\item Car on l'a dit c'est naïf !
+\end{itemize}
+
+La solution proposée est d'utiliser des variables d'environnement dans les Dockerfiles, dans les scripts d'installation/configuration et les codes sources de l'application. On se rappelle maintenant pourquoi il y avait ces variables d'environnement dans les Dockerfiles et scripts de la section précédente. Ainsi, on évite le premier problème de mise à jour de ces informations.
+
+Docker permet de transmettre aux containers un fichier d'environnement qui contient la liste de toutes les variables d'environnement requises par les containers. Pour passer ce fichier à un container, on utilise le flag \code{docker run --env-file=XXX.env}.
+
+Voici un exemple de fichier d'environnement :
+\begin{bashcode}
+> cat db_config.env
+MYSQL_USERNAME=toto
+MYSQL_PASSWORD=password
+MYSQL_HOSTNAME=mysqlsrv
+MYSQL_DB=todo_list
+MYSQL_ROOT_PASSWORD=very_secured_password
+TASKS_TABLE=tbl_tasks
+\end{bashcode}
+Pour résoudre le second problème, on propose de versionner uniquement un fichier squelette  \break(\code{db\_config\_skeleton.env}) qui contient les variables d'environnement mais sans valeurs. L'utilisateur devrait donc copier ce fichier en \code{db\_config.env} puis ajouter les identifiants qu'il souhaite. On veillera à ignorer ce dernier fichier dans le \code{.gitignore} afin de ne pas committer les \textit{usernames} et \textit{passwords} et ainsi les rendre public.
+
+Voici le contenu de fichier d'environnement \code{db\_config\_skeleton.env}:
+\begin{bashcode}
+> cat db_config_skeleton.env
+MYSQL_USERNAME=
+MYSQL_PASSWORD=
+MYSQL_HOSTNAME=
+MYSQL_DB=
+MYSQL_ROOT_PASSWORD=
+TASKS_TABLE=
+\end{bashcode}
+
+On peut désormais lancer nos containers.
+
+\subsection{Lancement du container MariaDB/MySQL}
+Pour lancer le container, deux scripts ont été écrits. Le script \code{build.sh} permet de construire l'image et \code{start.sh} permet de lancer un container basé sur cette image.
+
+\textbf{build.sh}
+\begin{bashcode}
+#/bin/bash
+docker build --disable-content-trust -t mysql-alpine . 
+\end{bashcode}
+
+On note ici la présence de plusieurs options. L'option \code{--disable-content-trust} permet de désactiver pour cette opération seulement Docker Content Trust (voir \ref{ssc-content-trust}). En effet, comme on l'a dit, les images signées pour ARM ne sont pas monnaie courante, on ne peut donc pas profiter de ce mécanisme de sécurité. Cependant, on se souvient que dans le Dockerfile de cette image, on utilisait un hash (@sha256:XXX). Ceci permet déjà une première protection quant à l'intégrité de l'image et de sa provenance.
+
+La seconde option \code{-t} est simplement l'indication du nom de l'image. Ceci permet par la suite d'y faire référence par un nom plutôt que par un ID.
+
+\textbf{start.sh}
+\begin{bashcode}
+#!/bin/bash
+docker run --disable-content-trust -d --memory=512M --cap-drop=all --cap-add={SETGID,SETUID,CHOWN,DAC_OVERRIDE,KILL,FOWNER} --name "mysqlsrv" --env-file="../db_config.env" -v /tmp/toto/:/var/lib/mysql mysql-alpine
+\end{bashcode}
+
+Listes des flags :
+\begin{itemize}
+\item \code{--disable-content-trust} : voir explication précédente
+\item \code{-d} : le container va s'exécuter en arrière-plan (d $ \to $ daemonize). Utile dans le cas d'un service car on veut reprendre la main du terminal dès que le container a été lancé.
+\item \code{--memory} : Voir \ref{limit_memory_usage}. Permet de limiter la mémoire RAM à 512 MB. Si cette valeur est dépassée en cas de comportement inhabituel du container, il plantera sans monopoliser la mémoire pour les autres containers ou processus de la machine hôte
+\item \code{--cap-drop et --cap-add}. Voir \ref{ss-restrict-kernel-capa}. On retire toutes les permissions kernel par défaut. Puis, on ajoute uniquement celles qui sont nécessaires. Pour savoir lesquels sont nécessaires, il suffit de tester une à une chaque permission jusqu'à ce que cela fonctionne ! La liste des permissions par défaut se trouve ici : \url{https://benchmarks.cisecurity.org/tools2/docker/CIS_Docker_1.11.0_Benchmark_v1.0.0.pdf}, page 106.
+\item \code{--name} : Nom du container afin de pouvoir y faire référence par d'autres scripts/containers.
+\item \code{--env-file} : Fichier contenant les variables d'environnement nécessaires aux containers. Ici sont définies les noms d'utilisateurs, mots de passes et autres configurations MySQL.
+\item \code{-v} : On monte le volume \code{/var/lib/mysql} du container dans le dossier \code{/tmp/toto} de la machine hôte afin de persister les données de la base de données. Évidemment, le choix de \code{/tmp/toto} est discutable car ce dossier sera vidé à chaque reboot de la machine, ce qui n'est pas souhaite en production.
+\end{itemize}
+
+\textbf{Remarque :} Les valeurs limites pour la mémoire ont été estimées en regardant la consommation des containers quand ils sont lancés et en ajoutant une marge. Ainsi, il a été décidé de prendre 512 MB pour MariaDB/MySQL (207 MB, mesuré au repos) et 128 MB pour Flask (38 MB, mesuré au repos).
+
+
+\subsection{Lancement du container Flask}
+Pour lancer le container, deux scripts ont été écrits. Le script \code{build.sh} permet de construire l'image et \code{start.sh} permet de lancer un container basé sur cette image.
+
+\textbf{build.sh}
+\begin{bashcode}
+#/bin/bash
+docker build --disable-content-trust -t iot-hello-world .
+\end{bashcode}
+
+\textbf{start.sh}
+\begin{bashcode}
+#/bin/bash
+docker run --disable-content-trust -it --cap-drop=all --memory=128MB -p 5000:5000 --link mysqlsrv:mysqlsrv --rm --env-file="../db_config.env" iot-hello-world
+\end{bashcode}
+
+Pour le cas du container Flask, les options sont sensiblement les mêmes aux différences suivantes :
+\begin{itemize}
+\item Il n'y a pas de \code{--cap-add}. On voit donc ici que cette application n'a pas besoin de permissions accordées par défaut. Moins de permissions, moins de dégâts.
+\item \code{-p} : Mappe le port 5000 du container Flask sur le port 5000 du système hôte. On peut ainsi accéder au service REST depuis le réseau local (127.0.0.1 ou IP de la machine dans le sous-réseau).
+\item \code{--link} Autorise la communication avec le container MariaDB/MySQL instancié plutôt. C'est grâce à ce flag que les deux containers se voient dans le sous-réseau Docker. Plus de détails à la section \ref{sc-communication-entre-containers}.
+\end{itemize}
+
+\section{Communication entre les containers}\label{sc-communication-entre-containers}
+La communication entre les deux containers est indispensable pour le bon fonctionnement de l'application. On se souvient à la section \ref{ssc-restrict-network-traffic-containers} qu'on avait désactivé la communication entre containers par défaut. Pour explicitement autoriser la communication entre containers, il faut indiquer le flag \code{docker run --link} au démarrage du container.
+
+L'utilisation du flag \code{docker run --link} peut suffire dans le cas où il y a peu de containers qui doivent communiquer ensemble. Mais dans le cas où ce nombre venait à augmenter, il serait plus sage d'utiliser un outil appelé Docker Compose.
+
+Cet outil permet de faire des "compositions"/agrégations de containers fonctionnant ensemble. Dans ce projet, on ne dispose pas d'assez de temps pour expliquer en détails cet outil mais il faut savoir qu'il s'agit grossièrement d'un fichier YAML qui décrit une composition de containers en précisant leurs flags de démarrage et leurs liens. Une fois ce fichier de description écrit, il suffit de faire la commande \code{docker-compose up} pour démarrer l'ensemble des containers automatiquement. Plus d'informations disponible à cette adresse : \url{https://docs.docker.com/compose/}.
+
+
+\section{Démarrage de l'application}
+Pour démarrer l'application, il faut lancer les deux containers :
+\begin{bashcode}
+cd iot-hello-world
+cd mariadb
+./build.sh
+./start.sh
+cd ../flask
+./build.sh
+sleep 50s
+./start.sh
+\end{bashcode}
+
+Avant de lancer le container \textit{flask}, on doit attendre quelques instants le temps que le container \textit{mariadb} ait fini de se lancer.
+
+Une fois lancée, l'application est utilisable comme on peut le voir sur la capture d'écran suivante :
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.49]{img/todo-list-screenshot.png}
+\caption{Capture d'écran d'une requête GET sur l'application Hello World}
+\end{figure}
+
 
 \section{Analyse}
-TODO dire ce qu'on a fait et ce qu'on aurait pu (mieux) faire.
+Actuellement, l'application est fonctionnelle sur la cible. L'utilisation de Docker pour une application de ce genre n'est peut être pas flagrante mais a le mérite de rester suffisamment simple pour se concentrer sur la partie Docker.
+
+Maintenant que ces Dockerfiles et scripts ont été écrits, il est très facile de déployer cette application sur toutes les cibles ARM qui possèdent Docker. En effet, il suffit de cloner le \textit{repository} Github et de lancer les containers. De plus, la mise à jour de l'application est facilitée. Une fois un bug corrigé et \textit{pushé} sur Github, les clients n'ont pas \textit{pull} les modifications et relancer les containers sans s'inquiéter si la mise à jour va être compatible avec leur système puisque tout est encapsulé par Docker.
+
+Néanmoins, il faudrait tout de même utiliser Docker Compose bien que cette application ne soient composée que de deux containers. C'est plus propre et plus maintenable. De plus, il faudrait veiller à utiliser l'éventuelle future image officielle de Alpine Linux pour ARM plutôt que de faire confiance à une image produite par un inconnu. 
 
 \begin{landscape}
 \chapter{Déroulement du projet}
@@ -1531,7 +1829,7 @@ TODO dire ce qu'on a fait et ce qu'on aurait pu (mieux) faire.
 \section{Planning initial}
 \begin{figure}[ht]
 \centering
-\includegraphics[height=4.7cm]{img/initial_planning.png}
+\includegraphics[width=24cm]{img/initial_planning.png}
 \caption{Planning initial - 04.03.2016}
 \end{figure}
 
@@ -1539,8 +1837,8 @@ TODO dire ce qu'on a fait et ce qu'on aurait pu (mieux) faire.
 \section{Planning final}
 \begin{figure}[ht]
 \centering
-\includegraphics[draft,height=4.7cm]{img/initial_planning.png}
-\caption{Planning final - TODO date}
+\includegraphics[width=24cm]{img/final_planning.png}
+\caption{Planning final - 10.06.2016}
 \end{figure}
 
 \end{landscape}
@@ -1597,8 +1895,21 @@ Ainsi, je pense que produire une application Docker est plus intéressante à pa
 De cette manière, on veut pouvoir revenir en arrière à tout moment. C'est le principe du rollback évoqué dans le rapport. Au chapitre 7.3 de ce dernier, l'élève effectue des rollbacks grâce à la commande \code{docker history}. Je pense que c'est une mauvaise idée et qu'il serait plus simple et pratique de rester dans l'esprit du container jetable. En effet, si l'on construit une image à partir d'un Dockerfile et qu'on versionne ce Dockerfile (et les fichiers qui l'accompagnent) avec git par exemple, il devient est plus pratique à partager (size(Dockerfile + fichiers de l'app) \textless{} size(container)). De plus, on sait exactement ce que contient à l'instant t (ou au tag t) le container rien qu'en lisant le Dockerfile qu'il l'a produit.
 
 \chapter{Conclusion}
-TODO... ce qu'on voulait faire, ce qui a été fait, ce qu'il reste à faire/pourrait faire
+Le projet est constitué de deux parties principales; La génération d'un système Linux minimal pouvant exécuter Docker et la cross compilation de Docker sur une machine ARM et, comme deuxième objectif, une analyse de l'aspect sécurité de Docker.
 
+Plusieurs solutions ont été tentées pour produire un binaire Docker ARM mais aucune d'entre elle n'a aboutie. Concernant le système minimal, plusieurs pistes ont été proposées mais il a été décidé de passer au 3ème objectif, la sécurité, car le temps alloué a été consommé et il faillait commencer la partie sur la sécurité. Tous les détails se trouvent dans le rapport "\oldreportname".
+
+Pour la suite du projet sur la cible (\odroid), il a été choisi d'utiliser Arch Linux ARM, une distribution qui propose dans ses packages Docker. On n'a donc pas utilisé un binaire cross-compilé par nos soins ni un système minimal maison mais Archlinux ARM et le binaire Docker de ce dernier.
+
+Pour le dernier objectif, on a analysé les points chauds et mis en place plusieurs mécanismes améliorant la sécurité. On peut citer la création d'une partition chiffrée pour les données de Docker, la configuration du \textit{daemon} et l'utilisation de bonnes pratiques quant à la création et utilisation de containers Docker.
+
+Enfin, une application \textit{Hello World} dite de démonstration a été développée en respectant le plus possible les recommandations de sécurité évoquées dans ce rapport.
+
+Au final, le bilan du projet s'annonçait mitigé mais sur la partie sur la sécurité est relativement complète et mise en pratique avec une application. De manière générale, ce projet a permis de comprendre comment utiliser Docker et de comprendre quelques mécanismes internes de cet outil.
+
+Néanmoins, il reste plusieurs points à compléter comme le fait, évidemment, de pouvoir cross compiler Docker sur ARM mais également d'utiliser des outils comme Docker Compose qui permet de gérer un ensemble de containers devant fonctionner ensemble.
+
+Personnellement, je pense que ce rapport permet, d'une part, d'attirer l'attention sur plusieurs aspects de la sécurité quand on utilise Docker et, d'une autre, de montrer comment réduire les problèmes de sécurité les plus courants car on montre, dans la plupart des cas, une solution aux problèmes relevés.
 
 % == Bibliography
 \nocite{*} % cite all
@@ -1618,6 +1929,13 @@ Source : \url{https://archlinuxarm.org/platforms/armv7/samsung/odroid-xu3}
 \chapter{Résultat du benchmark de sécurité après modifications}\label{apx-bench-after-modif}
 
 \inputminted[xleftmargin=20pt, linenos=true, breaklines=true, frame=single, framesep=6pt, tabsize=2, fontfamily=courier, fontsize=\small]{text}{../../docker_security_benchmark/after-modifications.log}
+
+
+\chapter{Code Python pour l'application Hello World}\label{apx-code-flask}
+
+\textbf{Remarque :} Le code sur le \textit{repository} Github (\url{https://github.com/krypty/iot-hello-world}) fait foi car il pourrait être plus à jour que la version du rapport actuellement lu.
+
+\inputminted[xleftmargin=20pt, linenos=true, breaklines=true, frame=single, framesep=6pt, tabsize=2, fontfamily=courier, fontsize=\small]{python}{appendices/main.py}
 
 \end{appendices}
 
