@@ -127,7 +127,7 @@ Fait par:\\
 }
 {
 \normalsize
-Sous le direction de: \\
+Sous la direction de: \\
 Prof. Jean-Roland \bsc{Schuler} \\
 A la \school
 }
@@ -170,9 +170,9 @@ L'aspect sécurité de Docker a été étudié en couches en s'attaquant d'abord
 
 
 \section{Résultats obtenus}
-Pour les deux premiers objectifs, plusieurs solutions ont été tentées mais aucune d'entre elle n'a pas permis de produire un binaire Docker ARM cross-compilé. Concernant le système minimal, plusieurs pistes ont été proposées mais il a été décidé de passer au 3ème objectif, la sécurité, car le temps alloué a été consommé et il faillait commencer la partie sur la sécurité. Tous les détails se trouvent dans le rapport "\oldreportname".
+Pour les deux premiers objectifs, plusieurs solutions ont été tentées, mais aucune d'entre elles n'a pas permis de produire un binaire Docker ARM cross compilé. Concernant le système minimal, plusieurs pistes ont été proposées, mais il a été décidé de passer au 3e objectif, la sécurité, car le temps alloué a été consommé et il faillait commencer la partie sur la sécurité. Tous les détails se trouvent dans le rapport "\oldreportname".
 
-Pour continuer le projet sur la cible (\odroid), il a été choisi d'utiliser Arch Linux ARM, une distribution qui propose dans ses packages Docker. On utilisera donc pas un binaire cross-compilé par nos soins ni un système minimal maison mais Archlinux ARM et le binaire Docker de ce dernier.
+Pour continuer le projet sur la cible (\odroid), il a été choisi d'utiliser Arch Linux ARM, une distribution qui propose dans ses packages Docker. On n’utilisera donc pas un binaire cross compilé par nos soins ni un système minimal maison, mais Arch Linux ARM et le binaire Docker de ce dernier.
 
 Pour le dernier objectif, on a analysé les points chauds et mis en place plusieurs mécanismes améliorant la sécurité. On peut citer la création d'une partition chiffrée pour les données de Docker, la configuration du \textit{daemon} et l'utilisation de bonnes pratiques quant à la création et utilisation de containers Docker.
 
@@ -259,7 +259,7 @@ Lien vers le constructeur : \url{http://www.hardkernel.com/main/products/prdt_in
 
 Initialement, il était prévu de générer un système d'exploitation minimal qui aurait été capable de faire tourner Docker et des containers. Malheureusement, il n'a pas été possible de cross compiler Docker \textit{et son daemon} afin de lancer des containers sur ce système minimal. Plus d'informations sont disponibles dans le rapport "\oldreportname".
 
-Ainsi, il a été décidé, de la même manière que pour le travail de bachelor précédent, d'utiliser une distribution GNU/Linux proposant Docker dans ses packages. Le choix s'est donc porté sur \textbf{Archlinux ARM} \footnote{Arch Linux ARM : \url{https://archlinuxarm.org/}}.
+Ainsi, il a été décidé, de la même manière que pour le travail de bachelor précédent, d'utiliser une distribution GNU/Linux proposant Docker dans ses packages. Le choix s'est donc porté sur \textbf{Arch Linux ARM} \footnote{Arch Linux ARM : \url{https://archlinuxarm.org/}}.
 
 Sur la page wiki de la distribution (\url{https://archlinuxarm.org/platforms/armv7/samsung/odroid-xu3}), on peut suivre un guide de génération de la carte SD qui contient le système d'exploitation. Une copie de ce guide est disponible à l'appendice \ref{install_alarm_odroid}. Sur la carte SD, il a une partition unique.
 
@@ -306,7 +306,7 @@ Server:
 \section{Situation actuelle}
 Pour cette partie du projet, l'objectif est le suivant : analyser et évaluer l'aspect sécurité de Docker dans le cadre d'une utilisation avec une carte embarquée.
 
-Pour rappel, on utilise la carte \odroid. Un des objectifs de ce projet était de générer un système GNU/Linux minimal contenant un binaire Docker cross-compilé. Malheureusement, cet objectif n'a pas abouti comme expliqué dans le rapport "\oldreportname".
+Pour rappel, on utilise la carte \odroid. Un des objectifs de ce projet était de générer un système GNU/Linux minimal contenant un binaire Docker cross compilé. Malheureusement, cet objectif n'a pas abouti comme expliqué dans le rapport "\oldreportname".
 
 Pour continuer sur la partie sécurité, il a été choisi d'utiliser une distribution GNU/Linux compatible avec la carte et qui propose dans ces dépôts un package Docker précompilé. Tout comme le travail précédent de M. Loïc Bassang, Arch Linux ARM a été sélectionné.
 
@@ -322,7 +322,7 @@ L'étude de la sécurité de Docker a donc été séparée avec les couches \tex
 
 \item \nameref{config_systeme_os_hote} : configuration du kernel, configuration des options de lancement de Docker, etc.
 
-\item \nameref{chp-app-hello-world} : application de démonstration ayant pour objectif de mettre en pratique les recommandations de sécurité évoqués dans les chapitres précédents
+\item \nameref{chp-app-hello-world} : application de démonstration ayant pour objectif de mettre en pratique les recommandations de sécurité évoquées dans les chapitres précédents
 
 \end{itemize}
 
@@ -512,7 +512,7 @@ Maintenant les notions de communication client \textit{daemon} et API REST écla
 
 \footnotetext{Source des images : \url{https://docs.docker.com/engine/extend/plugins_authorization/}}
 
-Comme on peut le voir sur les figures ci-dessus, les requêtes sont des requêtes HTTP JSON comme on peut le trouver fréquemment dans avec les API REST.
+Comme on peut le voir sur les figures ci-dessus, les requêtes sont des requêtes HTTP JSON comme on peut le trouver fréquemment dans des API REST.
 
 Il est possible d'utiliser plusieurs plug-ins en même temps. Dans ce cas, pour qu'une requête soit acceptée, il faut qu'elle puisse traverser tous les plug-ins (donc, être approuvée par tous les plug-ins). Si un seul plug-in refuse la requête alors elle est refusée.
 
@@ -576,7 +576,7 @@ Comme on peut le voir, on est capable de récupérer les logs de la cible sur l'
 ExecStart=/usr/bin/docker daemon -H fd:// --icc=false --storage-driver=devicemapper --log-driver=XXX --log-opt syslog-address=tcp://aaa.bbb.ccc.ddd --log-opt YYY
 \end{bashcode}
 
-\textbf{Analyse : } On l'a vu les containers produisent des logs qu'il est recommandé de centraliser sur une machine distante. Pour ce faire, Docker propose plusieurs \textit{log drivers} qui permettent ce besoin. Dans cet exemple, \textit{Syslog} a été utilisé, mais il existe d'autres \textit{log drivers}\footnote{Docker log drivers : \url{https://docs.docker.com/engine/admin/logging/overview/}}.
+\textbf{Analyse : } On l'a vu les containers produisent des logs qu'il est recommandé de centraliser sur une machine distante. Pour ce faire, Docker propose plusieurs \textit{log drivers} qui répondent à ce besoin. Dans cet exemple, \textit{Syslog} a été utilisé, mais il existe d'autres \textit{log drivers}\footnote{Docker log drivers : \url{https://docs.docker.com/engine/admin/logging/overview/}}.
 
 L'exemple présenté est sommaire, mais il montre le principe général. Dans un cas plus pratique, par exemple un ensemble de cibles qui transmettent la température ambiante à un serveur (ou autre application IoT), on configurerait les cibles pour émettre leurs logs sur un serveur distant. Ce serveur disposerait ensuite d'une interface web affichant l'ensemble des logs des cibles et il serait ainsi possible de suivre le fonctionnement de toutes les cibles. De plus, dans un cas pratique, il faudrait aussi veiller à regarder le contenu de l'image rsyslog téléchargée et vérifier qu'elle fasse bien uniquement ce qu'on lui demande et rien de plus ou alors créer une image rsyslog de toutes pièces.
 
@@ -720,13 +720,13 @@ Lancer un container avec un utilisateur qui n'existe pas dans le container n'est
 
 \textbf{Utilisateur toto} :
 \begin{textcode}
-> \$ docker run --user toto -it alpine-user
-/ \$ whoami
+> $ docker run --user toto -it alpine-user
+/ $ whoami
 toto
-/ \$ touch /toto.txt
+/ $ touch /toto.txt
 touch: /toto.txt: Permission denied
 \end{textcode}
-
+% $ $$ $
 Le container est lancé avec l'utilisateur toto (absent sur l'OS hôte et, mais présent dans le container). L'écriture sur \code{/} est refusée.
 
 \subsubsection{Analyse}
@@ -764,8 +764,6 @@ Docker Content Trust utilise deux clés distinctes, une \textit{Offline Key} et 
 \end{itemize}
 
 
-pourquoi on le change
-
 Grâce à ces protections, Docker annonce une meilleure sécurité quant à la provenance des images téléchargées. On évite ainsi plusieurs types d'attaques comme :
 \begin{itemize}
 \item Man In the Middle (l'attaquant se place entre le \textit{registry} et l'utilisateur et altère l'image téléchargée)
@@ -795,7 +793,7 @@ DOCKER_CONTENT_TRUST=1
 Après avoir redémarré, on relance le benchmark et on obtient la sortie suivante : \code{[PASS] 4.5  - Enable Content trust for Docker}
 
 \subsubsection{Utilisation dans la pratique}
-Désormais, tous les \code{docker pull} que l'on fait exige que les images téléchargées soient signées.
+Désormais, tous les \code{docker pull} que l'on fait exigent que les images téléchargées soient signées.
 
 Il existe donc 3 cas :
 \begin{enumerate}
@@ -871,9 +869,9 @@ Digest: sha256:9f7b4923[...]
 Status: Downloaded newer image for armhf/alpine@sha256:9f7b4923[...]
 \end{textcode}
 
-Ici par exemple, on remarque que l'image \code{armhf/alpine:latest} n'est pas signée. Par contre, si l'on spécifie le \textit{digest} de cette image, il est possible de la téléchargée sans avoir besoin d'indiquer le flag \code{--disable-content-trust}.
+Ici par exemple, on remarque que l'image \code{armhf/alpine:latest} n'est pas signée. Par contre, si l'on spécifie le \textit{digest} de cette image, il est possible de la télécharger sans avoir besoin d'indiquer le flag \code{--disable-content-trust}.
 
-De plus, indiquer le \textit{digest} dans le Dockerfile pour la commande \code{FROM xxx} est une bonne pratique, car on s'assure de toujours avoir la même image qui est téléchargée et de ne pas avoir de surprise si l'image a été mise à jour.
+De plus, indiquer le \textit{digest} dans le Dockerfile pour la commande \code{FROM xxx} est une bonne pratique, car on s'assure de toujours avoir la même image qui est téléchargée et de ne pas avoir de mauvaises surprises si l'image a été mise à jour.
 
 On peut trouver ce \textit{digest} quand on pull une image :
 \begin{textcode}
@@ -915,7 +913,7 @@ Les permissions accordées par défaut sont les suivantes\cite{github_docker_ker
 \item CAP\_AUDIT\_WRITE
 \end{itemize}
 
-La liste complète des permissions et leur description se trouve ici : \url{http://man7.org/linux/man-pages/man7/capabilities.7.html}
+La liste complète des permissions et de leur description se trouve ici : \url{http://man7.org/linux/man-pages/man7/capabilities.7.html}
 
 Pour ajouter ou supprimer des permissions, on utilise les arguments \code{--cap-add} et \code{--cap-drop} de la commande \code{docker run}.
 
@@ -977,7 +975,7 @@ Les principales raisons pour lesquelles on voudrait se connecter en ssh sur un c
 \item Redémarrage d'un service
 \end{itemize}
 
-Les 3 premiers points peuvent être résolus en utilisant des volumes. Un volume est un dossier stocké sur la machine hôte qui est monté dans un dossier du container. Ce n'est pas une partition que l'on monte sur le container mais plutôt un genre de lien symbolique. Grâce à ce mécanisme, il est possible de persister des données générées par un container, mais aussi de pouvoir partager ce volume et les données qu'il contient avec d'autres containers.
+Les 3 premiers points peuvent être résolus en utilisant des volumes. Un volume est un dossier stocké sur la machine hôte qui est monté dans un dossier du container. Ce n'est pas une partition que l'on monte sur le container, mais plutôt un genre de lien symbolique. Grâce à ce mécanisme, il est possible de persister des données générées par un container, mais aussi de pouvoir partager ce volume et les données qu'il contient avec d'autres containers.
 
 Dans l'exemple qui suit, on veut sauver les logs de deux containers. Pour ce faire, on va utiliser un volume qu'on appelle \textit{logs}. Ce volume est utilisé par les deux containers pour stocker les logs qu'ils produisent.
 
@@ -1022,7 +1020,7 @@ docker exec -it <container-id> /bin/sh
 \textbf{Remarque : } Le terminal sera lancé avec le même utilisateur que celui précisé au lancement du container. Cet utilisateur n'a peut-être pas les droits de gérer les services (ce qui serait légitime). Dans ce cas, on peut toujours envoyer des signaux avec la commande \code{docker kill -s <signal>} ou se connecter au socket démarré par le service pour lui demander de redémarrer. Les détails de cette technique sont expliqués ici : \url{https://blog.docker.com/2014/06/why-you-dont-need-to-run-sshd-in-docker/}. L'autre idée est de concevoir son container de manière à pouvoir le détruire et en recréer un autre sans que cela gêne le fonctionnement général. En théorie, cette solution est tout à fait viable, car les containers Docker sont conçus pour être isolés et indépendants. À partir du moment où les données ne sont pas stockées uniquement dans le container, il ne devrait pas y avoir de problèmes.
 
 \subsection{"5.10 - Limit memory usage for container"}\label{limit_memory_usage}
-Il est possible et recommandé de limiter les ressources offertes à un container. Ces ressources peuvent être entre autres la mémoire vive ou l'utilisation CPU (voir section sous section suivante).
+Il est possible et recommandé de limiter les ressources offertes à un container. Ces ressources peuvent être entre autres la mémoire vive ou l'utilisation CPU (voir sous section suivante).
 
 Limiter les ressources peut être une nécessité afin d'éviter un débordement d'un container. Si celui-ci se met à consommer toutes les ressources, car il est victime d'une attaque (déni de service par exemple) ou d'un bug, le système risque de se geler et l'on devra être obligé de le redémarrer. Ceci est d'autant plus problématique si d'autres containers étaient lancés. En limitant les ressources d'un container, celui-ci pourrait dysfonctionner sans gêner les autres processus (ou containers) de la machine hôte.
 
@@ -1255,7 +1253,7 @@ docker run --disable-content-trust --name=low-priority --cpu-shares=205 --memory
 
 Explication des paramètres :
 \begin{itemize}
-\item \code{--disable-content-trust} : désactive Content Trust. Comme on l'a évoqué à la section \ref{ssc-content-trust}, très peu d'images ARM supporte Content Trust à l'heure actuelle. On doit donc explicitement l'ignorer.
+\item \code{--disable-content-trust} : désactive Content Trust. Comme on l'a évoqué à la section \ref{ssc-content-trust}, très peu d'images ARM supportent Content Trust à l'heure actuelle. On doit donc explicitement l'ignorer.
 \item \code{--name} : nom du container
 \item \code{--cpu-shares} : nombre de parts, $205 \simeq 204.8 = 1024 \times 0.2$, 0.2 pour 20\%
 \item \code{--memory} : alloue uniquement 128 MB de RAM au container
@@ -1466,11 +1464,11 @@ Stocker les données de Docker dans une partition chiffrée est une bonne initia
 \section{Conclusion sur la configuration du système d'exploitation hôte}
 Le but de ce chapitre était de configurer le système d'exploitation hôte afin d'exécuter Docker et ses containers de la manière la plus sécurisée possible. Pour ce faire, on s'est basé sur un benchmark de sécurité qui liste un certain nombre de recommandations.
 
-Parmi ces recommandations, plusieurs ont été implémentées, d'autres simplement expliquée. A chaque fois, une explication complémentaire et un exemple pratique accompagne la recommandation. C'est une des plus-values apportée par ce rapport.
+Parmi ces recommandations, plusieurs ont été implémentées, d'autres simplement expliquées. À chaque fois, une explication complémentaire et un exemple pratique accompagne la recommandation. C'est une des plus-values apportées par ce rapport.
 
-Certaines recommandations n'ont malheureusement pas pu aboutir pour des causes variées. Malgré ceci, certains mécanismes internes de Docker sont désormais plus clair et il est toujours positif d'en retenir une leçon.
+Certaines recommandations n'ont malheureusement pas pu aboutir pour des causes variées. Malgré ceci, certains mécanismes internes de Docker sont désormais plus clairs et il est toujours positif d'en retenir une leçon.
 
-Finalement, une comparaison avant/après a été réalisé afin de voir ce qui a pu être réellement accompli.
+Finalement, une comparaison avant/après a été réalisée afin de voir ce qui a pu être réellement accompli.
 
 Cependant, il reste encore quelques pistes à explorer pour renforcer la sécurité de l'OS et de Docker. On peut citer :
 \begin{itemize}
@@ -1496,7 +1494,7 @@ Aspects à prendre en compte :
 \item Elle devra tenir compte des contraintes liées au monde de l'embarqué, voir chapitre \ref{sec-contraintes-monde-embarque}
 \item Elle devra tenir compte des aspects sécurités évoqués dans ce document
 \item Elle devra être suffisamment simple pour ne pas se perdre dans le code métier
-\item Communication entre containers avec Docker Compose. A introduire dans ce chapitre
+\item Communication entre containers 
 \end{itemize}
 
 \begin{figure}[H]
@@ -1519,7 +1517,7 @@ Les fonctionnalités de cette application sont les suivantes :
 \section{Récupération de l'application}
 Il faut d'abord récupérer l'application sur Github.
 
-A faire sur la cible :
+À faire sur la cible :
 \begin{bashcode}
 pacman -S git # installation de git si pas présent sur la cible
 git clone https://github.com/krypty/iot-hello-world.git
@@ -1529,24 +1527,24 @@ cd iot-hello-world
 La structure des fichiers est la suivante :
 \begin{textcode}
 db_config_skeleton.env
-mariadb
+mariadb/
     build.sh
     clear_db.sh
     Dockerfile
-    scripts
+    scripts/
         create_db.sh
         startup.sh
     start.sh
-flask
+flask/
     build.sh
     Dockerfile
-    src
+    src/
         main.py
     start.sh
 README.md
 \end{textcode}
 
-On retrouve donc les deux containers rangés dans des dossiers séparés, \textit{mariadb} et \textit{flask}. Pour les deux containers, on va analyser leur Dockerfile et les scripts liés à la création des containers. On ne va pas regarder le code de l'application à proprement parlé car ce n'est pas le but de ce chapitre. Cependant, le code du container Flask (\code{main.py}) est disponible en annexe à l'appendice \ref{apx-code-flask}.
+On retrouve donc les deux containers rangés dans des dossiers séparés, \textit{mariadb} et \textit{flask}. Pour les deux containers, on va analyser leur Dockerfile et les scripts liés à la création des containers. On ne va pas regarder le code de l'application à proprement parler, car ce n'est pas le but de ce chapitre. Cependant, le code du container Flask (\code{main.py}) est disponible en annexe à l'appendice \ref{apx-code-flask}.
 
 
 \section{Container MariaDB}
@@ -1580,7 +1578,7 @@ Ligne 1 : Indique l'image de départ. Ici, on a choisit une image basée sur Alp
 
 Un hash est spécifié (@sha256:XXX) ce qui permet de s'assurer de l'intégrité de l'image téléchargée (on est sûr de toujours télécharger la même image au bit près) et permet de figer la distribution à une version fonctionnelle connue. On évite dès lors de télécharger une nouvelle version de la distribution qui ne serait plus compatible avec notre application dans le futur.
 
-Ligne 6 : On expose le port MySQL 3306 pour permettre d'utiliser éventuellement le serveur MySQL du container à l'extérieur (comprendre sur la machine hôte). La commande \code{EXPOSE} indique que ce container utilise le port 3306 mais tant qu'on ne le mappe pas sur la machine hôte avec le flag \code{docker run -p 3306:3306}, la machine hôte ne peut pas y accéder. Dans le cas de cette application, on a pas besoin de mapper ce port sur la machine hôte car ce container va communiquer avec un autre container (Flask) et dans ce cas, un \textit{link} est suffisant (voir \ref{sc-communication-entre-containers}).
+Ligne 6 : On expose le port MySQL 3306 pour permettre d'utiliser éventuellement le serveur MySQL du container à l'extérieur (comprendre sur la machine hôte). La commande \code{EXPOSE} indique que ce container utilise le port 3306, mais tant qu'on ne le mappe pas sur la machine hôte avec le flag \code{docker run -p 3306:3306}, la machine hôte ne peut pas y accéder. Dans le cas de cette application, on a pas besoin de mapper ce port sur la machine hôte car ce container va communiquer avec un autre container (Flask) et dans ce cas, un \textit{link} est suffisant (voir \ref{sc-communication-entre-containers}).
 
 Ligne 8 : On ajoute les packages nécessaires à MySQL et on supprime directement les fichiers temporaires téléchargés. On fait ceci avec une seule commande \code{RUN} car chaque commande crée une nouvelle couche. La taille d'une image Docker est déterminée par la taille de sa couche la plus lourde. Donc, supprimer les fichiers temporaires n'aurait aucun effet, car ces derniers auraient été enregistrés dans la couche précédente. En faisant la suppression sur la même ligne, on évite la sauvegarde de ces fichiers sur une couche.
 
@@ -1610,7 +1608,7 @@ mysqld_safe --datadir="/var/lib/mysql"
 %$ $$ $
 
 
-Ce fichier montre l'installation de MySQL a proprement parlé. Concernant Docker, il n'apporte pas grand chose mais on peut noter la présence de variables (\$XXX) pour les informations sensibles comme les mots de passe. On justifie l'utilisation de ces variables à la section \ref{sc-lancement}.
+Ce fichier montre l'installation de MySQL a proprement parler. Concernant Docker, il n'apporte pas grand chose mais on peut noter la présence de variables (\$XXX) pour les informations sensibles comme les mots de passe. On justifie l'utilisation de ces variables à la section \ref{sc-lancement}.
 
 \textbf{create\_db.sh}
 \begin{bashcode}
@@ -1681,7 +1679,7 @@ Ligne 1 : On réutilise la même image $ \to $ Gain de temps à la construction 
 
 Ligne 2 : Flask tourne sur le port 5000. Il faut donc exposer ce port et le mapper pour pouvoir rendre le service REST accessible depuis l'extérieur (comprendre depuis la machine hôte, voire Internet).
 
-Lignes 7-17 : Installation des packages nécessaires à Flask. On doit installer des paquets en lien avec MySQL car Python (et particulièrement la librairie MySQL-Python) en a besoin pour effectuer des requêtes sur un serveur MySQL. Malheureusement, on est obligé d'installer le package \code{mysql-dev} qui est lourd uniquement pour une librairie qui n'est pas présente sous la forme d'un package à part entière sur Alpine Linux. La librairie en question est  \code{libmysqlclient-dev}\cite{bug_mysql_alpine}.
+Lignes 8-17 : Installation des packages nécessaires à Flask. On doit installer des paquets en lien avec MySQL car Python (et particulièrement la librairie MySQL-Python) en a besoin pour effectuer des requêtes sur un serveur MySQL. Malheureusement, on est obligé d'installer le package \code{mysql-dev} qui est lourd uniquement pour une librairie qui n'est pas présente sous la forme d'un package à part entière sur Alpine Linux. La librairie en question est  \code{libmysqlclient-dev}\cite{bug_mysql_alpine}.
 
 Lignes 19, 21 et 23 : On se déplace (\code{cd}) dans un dossier APP\_NAME qui est une variable qu'on a définie au sein du Dockerfile. On copiera les fichiers de l'application dans ce dossier plutôt qu'à la racine.
 
@@ -1818,7 +1816,7 @@ Une fois lancée, l'application est utilisable comme on peut le voir sur la capt
 \section{Analyse}
 Actuellement, l'application est fonctionnelle sur la cible. L'utilisation de Docker pour une application de ce genre n'est peut être pas flagrante mais a le mérite de rester suffisamment simple pour se concentrer sur la partie Docker.
 
-Maintenant que ces Dockerfiles et scripts ont été écrits, il est très facile de déployer cette application sur toutes les cibles ARM qui possèdent Docker. En effet, il suffit de cloner le \textit{repository} Github et de lancer les containers. De plus, la mise à jour de l'application est facilitée. Une fois un bug corrigé et \textit{pushé} sur Github, les clients n'ont pas \textit{pull} les modifications et relancer les containers sans s'inquiéter si la mise à jour va être compatible avec leur système puisque tout est encapsulé par Docker.
+Maintenant que ces Dockerfiles et scripts ont été écrits, il est très facile de déployer cette application sur toutes les cibles ARM qui possèdent Docker. En effet, il suffit de cloner le \textit{repository} Github et de lancer les containers. De plus, la mise à jour de l'application est facilitée. Une fois un bug corrigé et \textit{pushé} sur Github, les clients n'ont qu'à \textit{pull} les modifications et relancer les containers sans s'inquiéter si la mise à jour va être compatible avec leur système puisque tout est encapsulé par Docker.
 
 Néanmoins, il faudrait tout de même utiliser Docker Compose bien que cette application ne soient composée que de deux containers. C'est plus propre et plus maintenable. De plus, il faudrait veiller à utiliser l'éventuelle future image officielle de Alpine Linux pour ARM plutôt que de faire confiance à une image produite par un inconnu. 
 

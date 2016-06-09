@@ -41,7 +41,7 @@
 }
 
 \usepackage[hyphens]{url} % line wrap urls
-\usepackage{hyperref}
+\usepackage[hidelinks]{hyperref}
 
 % Version history
 \usepackage{vhistory}
@@ -152,7 +152,7 @@ Ce document s'inscrit dans le cadre du projet de semestre Docker and embedded sy
 
 Lien: \url{https://github.com/krypty/docker_and_embedded_systems}
 
-Il est important de noter que la vitesse de développement de Docker est assez hallucinante. En effet, sur Github (\url{https://github.com/docker/docker}) les commits se succèdent à vitesse grand V. Entre chaque version de Docker qui sortent environ tous les mois, il est courant d'avoir plus de 3000 commits qui ont été \emph{pushés}. Tout ceci pour dire qu'à la lecture de ce document, il est quasiment sûr que certaines pistes explorées soient définitivement obsolètes ou au contraire deviennent la voie à suivre du à une mise à jour quelconque.
+Il est important de noter que la vitesse de développement de Docker est assez hallucinante. En effet, sur Github (\url{https://github.com/docker/docker}) les commits se succèdent à vitesse grand V. Entre chaque version de Docker qui sortent environ tous les mois, il est courant d'avoir plus de 3000 commits qui ont été \emph{pushés}. Tout ceci pour dire qu'à la lecture de ce document, il est quasiment sûr que certaines pistes explorées soient définitivement obsolètes ou au contraire deviennent la voie à suivre due à une mise à jour quelconque.
 
 Le chapitre \ref{pres-docker} présente Docker afin de pouvoir comprendre les chapitres suivants.
 
@@ -367,7 +367,7 @@ Cette technique (et les suivantes basées sur celle-ci) est différente. Ici, on
 
 \subsection{Cheminement général}
 
-Il faut d'abord installer QEMU sur une machine. Ici Archlinux est utilisé, mais cela devrait être sensiblement la même chose pour d'autres distributions.
+Il faut d'abord installer QEMU sur une machine. Ici Arch Linux est utilisé, mais cela devrait être sensiblement la même chose pour d'autres distributions.
 
 \label{install_qemu_arch}
 \begin{bashcode}
@@ -455,9 +455,9 @@ Le tutoriel utilisé est le suivant: \url{https://github.com/RoEdAl/linux-raspbe
 
 Comme on peut le voir à la figure \ref{fig_chroot_qemu}, la première couche représente le dossier \textit{root} de notre machine et le niveau suivant, les dossiers qu'il contient. Dans un dossier (à créer) appelé \textit{docker\_qemu}, on retrouve les fichiers utilisés par le tutoriel évoqué à la section précédente.
 
-Dans le répertoire \textit{archlinux\_rpi2}, on retrouve le système Archlinux ARM extrait dans lequel on vient copier \code{qemu-arm-static} permettant d'émuler le système ARM.
+Dans le répertoire \textit{archlinux\_rpi2}, on retrouve le système Arch Linux ARM extrait dans lequel on vient copier \code{qemu-arm-static} permettant d'émuler le système ARM.
 
-En clair, tous les dossiers en dessus de \textit{archlinux\_rpi2} appartiennent à l'OS hôte et tous les fichiers en dessous, appartiennent au système invité, Archlinux ARM.
+En clair, tous les dossiers en dessus de \textit{archlinux\_rpi2} appartiennent à l'OS hôte et tous les fichiers en dessous, appartiennent au système invité, Arch Linux ARM.
 
 \begin{figure}[H]
 \begin{center}
@@ -484,7 +484,7 @@ On compile le programme de manière "classique" sans passer par un container Doc
 
 \subsection{Cheminement général}
 
-Installation de Go sur Archlinux:
+Installation de Go sur Arch Linux:
 
 \begin{bashcode}
 pacman -S go
@@ -498,7 +498,7 @@ export AUTO_GOPATH=1
 cd docker_tmp
 git checkout v1.10.3 -b gary
 
-# parmis les prérequis, il manquait btrfs-progs
+# parmi les prérequis, il manquait btrfs-progs
 yaourt btrfs-progs
 
 # on ignore devicemapper, car il y avait des erreurs.
@@ -536,7 +536,7 @@ Néanmoins, cette solution a permis de comprendre qu'il fallait peut-être modif
 
 Comme on a pu le voir, plusieurs techniques et tentatives ont été essayées. Aucune n'a permis de  compiler ou de cross compiler Docker pour obtenir un binaire ARM statiquement lié.
 
-Néanmoins, on sait que c'est possible, car d'une part des distributions comme Archlinux ARM intègrent un package Docker incluant le \textit{deamon} et d'une autre, car on a pu mettre la main sur un binaire isolé, voir section \ref{binaire_arm}.
+Néanmoins, on sait que c'est possible, car d'une part des distributions comme Arch Linux ARM intègrent un package Docker incluant le \textit{deamon} et d'une autre, car on a pu mettre la main sur un binaire isolé, voir section \ref{binaire_arm}.
 
 Encore une fois, il n'est pas impossible que Docker supporte officiellement le \textit{deamon} pour la plateforme ARM d'ici quelque temps et ce document sera obsolète.
 
@@ -610,7 +610,7 @@ docker run -d -p 80:80 rpi-busybox-httpd # essayez un autre port s'il est déjà
 Rendez-vous ensuite sur \url{http://localhost:80} pour observer la page web.
 
 \chapter{Conclusion}
-A la fin de la lecture de ce rapport, on se rend compte qu'il n'y a aucune méthode testée qui a permis de (cross-)compiler Docker sur la cible. Néanmoins, ce document montre les techniques utilisées et aidera peut-être en cas de reprise de cette partie du projet.
+À la fin de la lecture de ce rapport, on se rend compte qu'il n'y a aucune méthode testée qui a permis de (cross-)compiler Docker sur la cible. Néanmoins, ce document montre les techniques utilisées et aidera peut-être en cas de reprise de cette partie du projet.
 
 Heureusement, tout ceci a permis de mieux comprendre comment Docker était construit et comment il fonctionnait de manière générale. De plus, la génération d'un système depuis zéro a permis d'apprendre beaucoup sur Linux et les systèmes embarqués en général.
 

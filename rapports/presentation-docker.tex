@@ -4,7 +4,7 @@
 
 Le but de ce chapitre est d'apporter un contexte au projet réalisé afin de comprendre ce qui est expliqué dans la suite de ce document. Si le lecteur souhaite connaître les tréfonds de Docker, il est recommandé de lire le rapport "\bassangPrjSemestre" de M. Loic Bassang \cite{bassang_semestre}. 
 
-Docker est un outil qui permet d'empaqueter une application et ses dépendances dans un container léger, auto-suffisant, isolé et portable. En intégrant leur application dans un container, les développeurs s'assurent que celle-ci va tourner sur n'importe quel environnement GNU/Linux. Ainsi, le temps passé à configurer les différents environnements (développement, test et production typiquement) est réduit, voire même unifié\cite{shipping_container_linux_code}\cite{wikipedia_docker}\cite{what_is_docker}.
+Docker est un outil qui permet d'empaqueter une application et ses dépendances dans un container léger, autosuffisant, isolé et portable. En intégrant leur application dans un container, les développeurs s'assurent que celle-ci va tourner sur n'importe quel environnement GNU/Linux. Ainsi, le temps passé à configurer les différents environnements (développement, test et production typiquement) est réduit, voire même unifié\cite{shipping_container_linux_code}\cite{wikipedia_docker}\cite{what_is_docker}.
 
 Les caractéristiques principales des containers Docker sont les suivantes :
 \begin{itemize}
@@ -69,7 +69,7 @@ Une fois l'image construite, on peut exécuter l'application dans un container. 
 
 
 \section{Système de fichiers en couche}\label{pres-docker-systeme-fichiers-couches}
-Chaque image Docker est composée d'une liste de couches (\textit{layers}) superposées en lecture seule\cite{understanding_image_container_driver_storage}. Chaque couche représente la différence du système de fichiers par rapport à la couche précédente. Sur la figure \ref{docker-image-layers}, on peut voir 4 couches (identifiables une chaîne de caractères unique, par exemple \code{91e54dfb1179}) et leur taille respective.
+Chaque image Docker est composée d'une liste de couches (\textit{layers}) superposées en lecture seule\cite{understanding_image_container_driver_storage}. Chaque couche représente la différence du système de fichiers par rapport à la couche précédente. Sur la figure \ref{docker-image-layers}, on peut voir 4 couches (identifiables par une chaîne de caractères unique, par exemple \code{91e54dfb1179}) et leur taille respective.
 
 \begin{figure}[hbtp]
 \centering
